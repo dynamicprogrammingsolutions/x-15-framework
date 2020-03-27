@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                        request_market_orders.mqh |
+//|                                    processor_moneymanagement.mqh |
 //|                        Copyright 2019, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
@@ -7,21 +7,11 @@
 #property link      "https://www.mql5.com"
 #property strict
 
-#include "request_order.mqh"
+#include "order_request_base.mqh"
 
-class CRequestOpenMarket : public CRequestOrder {
+class CMoneyManagement {
 public:
-   virtual int Type() { return ORDER_REQUEST_OPEN_MARKET; }
-   int slippage;
-   string comment;
-   int magic;
-   int ticket;
-   int error;
-   CRequestOpenMarket():
-      slippage(0),
-      comment(NULL),
-      magic(0),
-      ticket(-1),
-      error(0)
-   {}
+   virtual double Calculate(CRequest* request) {
+      return 0;
+   }
 };

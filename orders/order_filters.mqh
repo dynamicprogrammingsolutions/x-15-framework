@@ -15,6 +15,8 @@
 #define ORDER_FILTER_SELL_LIMIT 0x0020
 #define ORDER_FILTER_LONG 0x0015
 #define ORDER_FILTER_SHORT 0x002A
+#define ORDER_FILTER_MARKET 0x0003
+#define ORDER_FILTER_PENDING 0x003C
 
 bool FilterOrder(int order_type, int filters) {
    return

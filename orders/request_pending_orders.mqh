@@ -7,18 +7,11 @@
 #property link      "https://www.mql5.com"
 #property strict
 
-#include "order_request_codes.mqh"
-#include "order_request_base.mqh"
+#include "request_order.mqh"
 
-class CRequestOpenPending : public CRequest {
+class CRequestOpenPending : public CRequestOrder {
 public:
    virtual int Type() { return ORDER_REQUEST_OPEN_PENDING; }
-   string symbol;
-   ENUM_ORDER_TYPE order_type;
-   double volume;
-   double price;
-   double sl;
-   double tp;
    datetime expiration;
    int slippage;
    string comment;
@@ -27,12 +20,6 @@ public:
    int error;
    
    CRequestOpenPending():
-     symbol(NULL),
-     order_type(-1),
-     volume(0),
-     price(0),
-     sl(0),
-     tp(0),
      expiration(0),
      slippage(0),
      comment(NULL),

@@ -10,74 +10,31 @@
 #include "signals.mqh"
 
 enum ENUM_SIGNAL {
-   SIGNAL_NONE,
-   SIGNAL_BOTH,
-   SIGNAL_NO,
+   TRADESIGNAL_NONE,
+   TRADESIGNAL_BOTH,
+   TRADESIGNAL_NO,
    SIGNAL_BUY,
    SIGNAL_SELL
 };
 
+string SignalToString(int signal) {
+   switch(signal) {
+      case SIGNAL_BOTH:
+         return "Both";
+      case SIGNAL_NO:
+         return "No Signal";
+      case SIGNAL_BUY:
+         return "Buy";
+      case SIGNAL_SELL:
+         return "Sell";
+      default:
+         return "None";
+   }
+}
+
 typedef int (*SignalFunc)(int);
 
-class CTradeSignal : public CSignal<int,int> {
-public:
-   virtual CSignal<int,int>* getANDCombinator(CSignal<int,int>* one, CSignal<int,int>* other) {
-      return new CTradeSignalWrapper(new CTradeSignalAND(one,other));
-   }
-   virtual CSignal<int,int>* getORCombinator(CSignal<int,int>* one, CSignal<int,int>* other) {
-      return new CTradeSignalWrapper(new CTradeSignalOR(one,other));
-   }
-};
-
-class CTradeSignalWrapper : public CTradeSignal {
-private:
-   CSignal<int,int>* m_delegate;
-public:
-   CTradeSignalWrapper(CSignal<int,int>* delegate) : m_delegate(delegate) {}
-   ~CTradeSignalWrapper() {
-      if (CheckPointer(m_delegate)==POINTER_DYNAMIC) delete m_delegate;
-   }
-   virtual int Run(int bar) {
-      return m_delegate.Run(bar);
-   }
-   virtual void OnTick() {
-      m_delegate.OnTick();
-   }
-};
-
-typedef int (*TradeSignalSaverFunc)(int,CTradeSignal*,int,void*&);
-typedef int (*TradeSignalWrapperFunc)(int,CTradeSignal*,int,void*);
-#define SIGNAL_EXECUTION_RUN 1
-#define SIGNAL_EXECUTION_ONTICK 2
-
-class CTradeSignalWithState : public CTradeSignal {
-private:
-   void* m_state;
-protected:
-   CTradeSignal* m_delegate;
-public:
-   CTradeSignalWithState(CTradeSignal* delegate) : m_delegate(delegate) {}
-   ~CTradeSignalWithState() {
-      if (CheckPointer(m_state)==POINTER_DYNAMIC) delete m_state;
-   }
-   virtual int Run(int bar) {
-      return m_delegate.Run(bar);
-   }
-   virtual void OnTick() {
-      m_delegate.OnTick();
-   }
-   virtual void SetState(void* state) { m_state = state; }
-   virtual void* GetState() { return m_state; }
-};
-
-class CTradeSignalWithStateWrapper : public CTradeSignalWithState {
-public:
-   CTradeSignalWithStateWrapper(CTradeSignalWithState* delegate) : CTradeSignalWithState(delegate) {}
-   virtual void SetState(void* state) { ((CTradeSignalWithState*)m_delegate).SetState(state); }
-   virtual void* GetState() { return ((CTradeSignalWithState*)m_delegate).GetState(); }
-};
-
-class CSignalFunc : public CTradeSignal {
+class CSignalFunc : public CSignal<int,int> {
 protected:
    SignalFunc m_func;
 public:
@@ -88,6 +45,42 @@ public:
 CSignal<int,int>* CreateSignal(SignalFunc func) {
    return new CSignalFunc(func);
 }
+
+typedef int (*FilterFunc)(int,CSignal<int,int>*);
+typedef int (*FilterFuncWithState)(int,CSignal<int,int>*,void*&);
+
+class CFilterFunc : public CFilter<int,int> {
+protected:
+   FilterFunc m_func;
+public:
+   CFilterFunc(FilterFunc func): m_func(func) {}
+   virtual int Apply(int bar, CSignal<int,int>* next) {
+      return m_func(bar,next);
+   }
+};
+
+CFilter<int,int>* CreateFilter(FilterFunc func) {
+   return new CFilterFunc(func);
+}
+
+class CFilterFuncWithState : public CFilter<int,int> {
+protected:
+   FilterFuncWithState m_func;
+   void* m_state;
+public:
+   CFilterFuncWithState(FilterFuncWithState func): m_func(func) {}
+   ~CFilterFuncWithState() {
+      if (CheckPointer(m_state)==POINTER_DYNAMIC) delete m_state;
+   }
+   virtual int Apply(int bar, CSignal<int,int>* next) {
+      return m_func(bar,next,m_state);
+   }
+};
+
+CFilter<int,int>* CreateFilter(FilterFuncWithState func) {
+   return new CFilterFuncWithState(func);
+}
+
 
 int SignalAND(int one, int other) {
    if (one == other) return one;
@@ -136,93 +129,10 @@ public:
    }
 };
 
-
-
-/*
-class CTradeSignalAND : public CTradeSignal {
-protected:
-   CSignal<int,int>* m_one;
-   CSignal<int,int>* m_other;
-   bool m_delete_pointers;
-public:
-   CTradeSignalAND(CSignal<int,int>* one, CSignal<int,int>* other, bool delete_pointers=true) :
-      m_one(one),
-      m_other(other),
-      m_delete_pointers(delete_pointers)
-      {}
-   ~CTradeSignalAND() {
-      if (m_delete_pointers) {
-         if (CheckPointer(m_one)==POINTER_DYNAMIC) delete m_one;
-         if (CheckPointer(m_other)==POINTER_DYNAMIC) delete m_other;
-      }
-   }
-   virtual int Run(int bar) {
-      return SignalAND(m_one.Run(bar),m_other.Run(bar));
-   }
-   virtual void OnTick() {
-      m_one.OnTick();
-      m_other.OnTick();
-   }
-};
-
-class CTradeSignalOR : public CTradeSignal {
-protected:
-   CSignal<int,int>* m_one;
-   CSignal<int,int>* m_other;
-   bool m_delete_pointers;
-public:
-   CTradeSignalOR(CSignal<int,int>* one, CSignal<int,int>* other, bool delete_pointers = true) : 
-      m_one(one),
-      m_other(other),
-      m_delete_pointers(delete_pointers)
-      {}
-   ~CTradeSignalOR() {
-      if (m_delete_pointers) {
-         if (CheckPointer(m_one)==POINTER_DYNAMIC) delete m_one;
-         if (CheckPointer(m_other)==POINTER_DYNAMIC) delete m_other;
-      }
-   }
-   virtual int Run(int bar) {
-      return SignalOR(m_one.Run(bar),m_other.Run(bar));
-   }
-   virtual void OnTick() {
-      m_one.OnTick();
-      m_other.OnTick();
-   }
-};
-*/
-
-typedef int (*FilterFunc)(int,CSignal<int,int>*);
-typedef int (*FilterFuncWithState)(int,CSignal<int,int>*,void*&);
-
-class CFilterFunc : public CFilter<int,int> {
-protected:
-   FilterFunc m_func;
-public:
-   CFilterFunc(FilterFunc func): m_func(func) {}
-   virtual int Apply(int bar, CSignal<int,int>* next) {
-      return m_func(bar,next);
-   }
-};
-
-CFilter<int,int>* CreateFilter(FilterFunc func) {
-   return new CFilterFunc(func);
+CSignal<int,int>* signal_and(CSignal<int,int>* one, CSignal<int,int>* other) {
+   return new CTradeSignalAND(one,other);
 }
 
-class CFilterFuncWithState : public CFilter<int,int> {
-protected:
-   FilterFuncWithState m_func;
-   void* m_state;
-public:
-   CFilterFuncWithState(FilterFuncWithState func): m_func(func) {}
-   ~CFilterFuncWithState() {
-      if (CheckPointer(m_state)==POINTER_DYNAMIC) delete m_state;
-   }
-   virtual int Apply(int bar, CSignal<int,int>* next) {
-      return m_func(bar,next,m_state);
-   }
-};
-
-CFilter<int,int>* CreateFilter(FilterFuncWithState func) {
-   return new CFilterFuncWithState(func);
+CSignal<int,int>* signal_or(CSignal<int,int>* one, CSignal<int,int>* other) {
+   return new CTradeSignalOR(one,other);
 }

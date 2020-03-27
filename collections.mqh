@@ -6,7 +6,6 @@
 #include <Arrays\ArrayObj.mqh>
 #include <Arrays\Tree.mqh>
 
-
 template<typename T>
 class CIteratorObj : public CObject {
 public:
@@ -451,14 +450,15 @@ class CArrayObjTyped : public CArrayObj {
 template<typename K,typename T>
 class CMapPrimitive : public CIterablePrimitiveByIdx<T> {
 private:
-    CArrayObjTyped<CEntryPrimitive<K,T>> m_arr;
+   
+   CArrayObjTyped<CEntryPrimitive<K,T>> m_arr;
 public:
    CMapPrimitive() {
       m_arr.Sort();
    }
    virtual int Type(void) const { return(1573847623);}
    void Put(K key, T val) {
-      CEntryPrimitive<K,T>* newEntry = new CEntryPrimitive<K,T>(key,val);
+      CEntryPrimitive<K,T>* newEntry = new CEntryPrimitive<K,T>(key,val);      
       int pos = m_arr.Search(newEntry);
       if (pos != -1) {
          m_arr.Delete(pos);
@@ -509,6 +509,59 @@ public:
    }
 };
 
+/* Tested, but performance wasn't as good.
+*
+template<typename T>
+class CObjectComparer: public IComparer<T>
+{
+public:
+   int               Compare(T x,T y) { return x.Compare(y); }
+};
+
+template<typename K,typename T>
+class CMapPrimitiveRedBlack : public CIterablePrimitiveByIdx<T> {
+private:
+   CRedBlackTree<CEntryPrimitive<K,T>*> m_tree;
+    CArrayObjTyped<CEntryPrimitive<K,T>> m_arr;
+public:
+   CMapPrimitiveRedBlack() : m_tree(new CObjectComparer<CEntryPrimitive<K,T>*>()) {
+      m_arr.Sort();
+   }
+   virtual int Type(void) const { return(1573847623);}
+   void Put(K key, T val) {
+      CEntryPrimitive<K,T>* newEntry = new CEntryPrimitive<K,T>(key,val);
+      if (m_tree.Contains(newEntry)) {
+         m_tree.Remove(newEntry);
+      }
+      m_tree.Add(newEntry);
+   }
+   void Remove(const K key) {
+      CEntryPrimitive<K,T> findBy(key,NULL);
+      m_tree.Remove(GetPointer(findBy));
+   }
+   bool IsKeyPresent(const K key) {
+      CEntryPrimitive<K,T> findBy(key,NULL);
+      return m_tree.Contains(GetPointer(findBy));
+   }
+   T Get(const K key) {
+      CEntryPrimitive<K,T> findBy(key,NULL);
+      CRedBlackTreeNode<CEntryPrimitive<K,T>*>* node = m_tree.Find(GetPointer(findBy));
+      if (node == NULL) return NULL;
+      else {
+         return node.Value().GetValue();
+      }
+   }
+   virtual int Total() {
+      return m_tree.Count();
+   }
+   virtual CIteratorPrimitive<T>* GetIterator() {
+      return NULL;
+   }
+   T operator[](K key) {
+      return this.Get(key);
+   }
+};
+*/
 
 template<typename T>
 class CMapStrObj : public CIterableObjByIdx<T> {

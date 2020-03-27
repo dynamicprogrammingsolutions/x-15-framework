@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                         request_close_orders.mqh |
+//|                                        request_cancel_orders.mqh |
 //|                        Copyright 2019, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
@@ -11,9 +11,9 @@
 #include "order_request_base.mqh"
 #include "symbols.mqh"
 
-typedef void (*CloseCallBack)(int order_ticket, bool success, int error);
+typedef void (*CancelCallBack)(int order_ticket, bool success, int error);
 
-class CRequestCloseAll : public CRequest {
+class CRequestCancelAll : public CRequest {
 
 public:
    CSymbol* symbol;
@@ -22,11 +22,11 @@ public:
    int magic;
    int cnt_closed;
    int cnt_error;
-   CloseCallBack callback;
+   CancelCallBack callback;
 
-   virtual int Type() { return ORDER_REQUEST_CLOSE_ALL; }
+   virtual int Type() { return ORDER_REQUEST_CANCEL_ALL; }
    
-   CRequestCloseAll():
+   CRequestCancelAll():
       symbol(NULL),
       filter(0),
       slippage(0),

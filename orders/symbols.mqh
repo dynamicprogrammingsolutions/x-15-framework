@@ -7,37 +7,70 @@
 #property link      "https://www.mql5.com"
 #property strict
 
-#include "order_filters.mqh"
-#include "..\generic_collections\ArrayList.mqh"
-#include "..\generic_collections\HashMap.mqh"
+#ifndef FRACTIONAL_TRESHOLD
+#define FRACTIONAL_TRESHOLD 50000
+#endif
+
+class CSymbol {
+public:
+   double ask;
+   double bid;
+   string symbol;
+   double ticksize;
+   double lotstep;
+   double maxlot;
+   double minlot;
+   CSymbol(const string _symbol) :
+      symbol(_symbol),
+      ask(0),
+      bid(0),
+      ticksize(0),
+      lotstep(0),
+      maxlot(0),
+      minlot(0)
+   {}
+   virtual string Name() { return NULL; }
+   virtual double Ask() { return 0; }
+   virtual double Bid() { return 0; }
+   virtual double TickSize() { return 0; }
+   virtual double LotStep() { return 0; }
+   virtual double MaxLot() { return 0; }
+   virtual double MinLot() { return 0; }
+   virtual double LotRound(const double lotsize) { return lotsize; }
+   virtual double PriceRound(const double price) { return price; }
+   virtual bool IsFractional() { return false; }
+};
 
 #ifdef __MQL4__
 
-double GetPrice(const string symbol, ENUM_ORDER_TYPE order_type) {
+
+double GetPrice(CSymbol* symbol, ENUM_ORDER_TYPE order_type) {
+   if (CheckPointer(symbol) == POINTER_INVALID) symbol = __defaultSymbol;
    switch(order_type) {
       case ORDER_TYPE_BUY:
       case ORDER_TYPE_BUY_STOP:
       case ORDER_TYPE_BUY_LIMIT:
-         return ask(symbol);
+         return symbol.Ask();
       case ORDER_TYPE_SELL:
       case ORDER_TYPE_SELL_STOP:
       case ORDER_TYPE_SELL_LIMIT:
-         return bid(symbol);
+         return symbol.Bid();
       default:
          return 0;
    }
 }
 
-double GetClosePrice(const string symbol, ENUM_ORDER_TYPE order_type) {
+double GetClosePrice(CSymbol* symbol, ENUM_ORDER_TYPE order_type) {
+   if (CheckPointer(symbol) == POINTER_INVALID) symbol = __defaultSymbol;
    switch(order_type) {
       case ORDER_TYPE_SELL:
       case ORDER_TYPE_SELL_STOP:
       case ORDER_TYPE_SELL_LIMIT:
-         return ask(symbol);
+         return symbol.Ask();
       case ORDER_TYPE_BUY:
       case ORDER_TYPE_BUY_STOP:
       case ORDER_TYPE_BUY_LIMIT:
-         return bid(symbol);
+         return symbol.Bid();
       default:
          return 0;
    }
@@ -73,56 +106,58 @@ double AddToLoss(ENUM_ORDER_TYPE order_type, double price, double diff) {
    }
 }
 
-class CSymbol {
+class CSymbolImpl : public CSymbol {
 public:
-   string symbol;
-   double ticksize;
-   double lotstep;
-   double maxlot;
-   double minlot;
-   CSymbol(): ticksize(0) { }
+   CSymbolImpl(const string _symbol) : CSymbol(_symbol) {}
+   virtual string Name() {
+      if (symbol == NULL) return _Symbol;
+      else return symbol;
+   }
+   virtual double Ask() { ask = SymbolInfoDouble(symbol,SYMBOL_ASK); return ask; }
+   virtual double Bid() { bid = SymbolInfoDouble(symbol,SYMBOL_BID); return bid; }
+   virtual double TickSize() {
+      if (ticksize==0) ticksize = MarketInfo(symbol,MODE_TICKSIZE);
+      return ticksize;
+   }
+   virtual double LotStep() {
+      if (lotstep==0) lotstep = MarketInfo(symbol,MODE_LOTSTEP);
+      return lotstep;
+   }
+   virtual double MaxLot() {
+      if (maxlot==0) maxlot = MarketInfo(symbol,MODE_MAXLOT);
+      return maxlot;
+   }
+   virtual double MinLot() {
+      if (minlot==0) minlot = MarketInfo(symbol,MODE_MINLOT);
+      return minlot;
+   }
+   virtual double LotRound(const double lotsize) {
+      double step = LotStep();
+      double result_lots = MathRound(lotsize/step)*step;
+      result_lots = MathMax(result_lots,MinLot());
+      result_lots = MathMin(result_lots,MaxLot());
+      return lotsize;  
+   }
+   virtual double PriceRound(const double price) {
+      double ticksie = TickSize();
+      return MathRound(price/ticksize)*ticksize;
+   }
+   virtual bool IsFractional() {
+      return Bid()/TickSize() > FRACTIONAL_TRESHOLD;
+   }
 };
 
-#include "..\collections.mqh"
-CMapPrimitive<string,int> __symbolIds;
-CSymbol __symbols[1];
-int __symbols_count;
-#define CAPACITY_INCREASE_BY 10
-
-int GetSymbolId(const string symbol) {
-   int id;
-   if (symbol != NULL) {
-      int idx = __symbolIds.GetIdxByKey(symbol);
-      if (idx != -1) {
-         return __symbolIds.GetByIdx(idx);
-      } else {
-         if (ArraySize(__symbols)==__symbols_count) {
-            ArrayResize(__symbols,__symbols_count+CAPACITY_INCREASE_BY);
-         }
-         id = __symbols_count;
-         __symbols_count++;
-         __symbols[id].symbol = symbol;
-         __symbolIds.Put(symbol,id);
-         return id;
-      }
-   } else {
-      int idx = __symbolIds.GetIdxByKey(_Symbol);
-      if (idx != -1) {
-         return __symbolIds.GetByIdx(idx);
-      } else {
-         if (ArraySize(__symbols)==__symbols_count) {
-            ArrayResize(__symbols,__symbols_count+CAPACITY_INCREASE_BY);
-         }
-         id = __symbols_count;
-         __symbols_count++;
-         __symbols[id].symbol = _Symbol;
-         __symbolIds.Put(_Symbol,id);
-         return id;
-      }
-   }
+CSymbol* GetSymbol(const string symbol) {
+   return new CSymbolImpl(symbol);
 }
 
-double ask(const string symbol) {
+CSymbol* __defaultSymbol;
+
+CSymbol* GetDefaultSymbol() {
+   return new CSymbolImpl(NULL);
+}
+
+/*double ask(const string symbol) {
    return SymbolInfoDouble(symbol,SYMBOL_ASK);
 }
 
@@ -130,16 +165,22 @@ double bid(const string symbol) {
    return SymbolInfoDouble(symbol,SYMBOL_BID);
 }
 
+double ask(CSymbol* symbol) {
+   return SymbolInfoDouble(symbol.symbol,SYMBOL_ASK);
+}
+
+double bid(CSymbol* symbol) {
+   return SymbolInfoDouble(symbol.symbol,SYMBOL_BID);
+}
+
 double ticksize(const string symbol) {
    return MarketInfo(symbol,MODE_TICKSIZE);
 }
 
-double ticksize_i(const int symbolId) {
-   if (__symbols[symbolId].ticksize == 0) {
-      __symbols[symbolId].ticksize = MarketInfo(__symbols[symbolId].symbol,MODE_TICKSIZE);
-   }
-   return __symbols[symbolId].ticksize;
+double ticksize(CSymbol* symbol) {
+   return MarketInfo(symbol.symbol,MODE_TICKSIZE);
 }
+
 
 double LotStep(const string symbol) {
    return MarketInfo(symbol,MODE_LOTSTEP);
@@ -161,15 +202,13 @@ double LotRound(const string symbol, double lotsize) {
    return lotsize;  
 }
 
-#define FRACTIONAL_TRESHOLD 50000
-double SymbolIsFractional(const string symbol) {
-   return bid(symbol)/ticksize(symbol) > FRACTIONAL_TRESHOLD;
+double LotRound(CSymbol* symbol, double lotsize) {
+   return LotRound(symbol.symbol,lotsize);
 }
 
-int ConvertParamToFractional(const string symbol, double value) {
-   if (SymbolIsFractional(symbol)) return (int)(value*10);
-   else return (int)value;
-}
+double SymbolIsFractional(const string symbol) {
+   return bid(symbol)/ticksize(symbol) > FRACTIONAL_TRESHOLD;
+}*/
 
 #endif
 
@@ -179,3 +218,8 @@ int ConvertParamToFractional(const string symbol, double value) {
 
 
 #endif
+
+int ConvertParamToFractional(CSymbol* symbol, double value) {
+   if (symbol.IsFractional()) return (int)(value*10);
+   else return (int)value;
+}

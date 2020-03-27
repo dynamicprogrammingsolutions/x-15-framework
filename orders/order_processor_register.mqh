@@ -7,8 +7,11 @@
 #property link      "https://www.mql5.com"
 #property strict
 
+#include "../ptr.mqh"
+
 class COrderProcessor {
 public:
+   int refcnt;
    virtual void ProcessOrder(int request, void* parameters, COrderProcessor* next) {
       
    }
@@ -39,7 +42,14 @@ class COrderProcessorWithNext : public COrderProcessor {
    COrderProcessor* m_delegate;
    COrderProcessor* m_next;
 public:
-   COrderProcessorWithNext(COrderProcessor* delegate, COrderProcessor* next): m_delegate(delegate), m_next(next) {}
+   COrderProcessorWithNext(COrderProcessor* delegate, COrderProcessor* next): m_delegate(delegate), m_next(next) {
+      AttachPtr(m_delegate);
+      AttachPtr(m_next);
+   }
+   ~COrderProcessorWithNext() {
+      DetachPtr(m_delegate);
+      DetachPtr(m_next);
+   }
    virtual void ProcessOrder(int request, void* parameters) {
       m_delegate.ProcessOrder(request, parameters, m_next);
    }
@@ -49,7 +59,12 @@ class COrderProcessorWithoutNext : public COrderProcessor {
    COrderProcessor* m_delegate;
    COrderProcessorNull m_next;
 public:
-   COrderProcessorWithoutNext(COrderProcessor* delegate): m_delegate(delegate) {}
+   COrderProcessorWithoutNext(COrderProcessor* delegate): m_delegate(delegate) {
+      AttachPtr(m_delegate);
+   }
+   ~COrderProcessorWithoutNext() {
+      DetachPtr(m_delegate);
+   }
    virtual void ProcessOrder(int request, void* parameters) {
       m_delegate.ProcessOrder(request,parameters,GetPointer(m_next));
    }
@@ -59,18 +74,21 @@ public:
 class __COrderProcessorChain {
    COrderProcessor* m_order_processor;
 public:
+   ~__COrderProcessorChain() {
+      DetachPtr(m_order_processor);
+   }
    void AddOrderProcessor(COrderProcessor* order_processor) {
       if (CheckPointer(m_order_processor) == POINTER_INVALID) {
-         m_order_processor = new COrderProcessorWithoutNext(order_processor);
+         m_order_processor = AttachPtr(new COrderProcessorWithoutNext(order_processor));
       } else {
-         m_order_processor = new COrderProcessorWithNext(order_processor,m_order_processor);
+         m_order_processor = ReplacePtr(m_order_processor,new COrderProcessorWithNext(order_processor,m_order_processor));
       }
    }
    bool OrderProcessorRegistered() {
       return CheckPointer(m_order_processor) != POINTER_INVALID;
    }
    void RemoveOrderProcessors() {
-      if (CheckPointer(m_order_processor) == POINTER_DYNAMIC) delete m_order_processor;
+      DetachPtr(m_order_processor);
       m_order_processor = NULL;
    }
    void ProcessOrder(int request, void* parameters) {
