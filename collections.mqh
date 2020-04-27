@@ -20,6 +20,7 @@ public:
 template<typename T>
 class CIteratorPrimitive : public CObject {
 public:
+   virtual void Reset() {}
    virtual T GetNext() {
       return NULL;
    }
@@ -95,6 +96,10 @@ private:
    CIterableObjByIdx<T>* m_subject;
 public:
    CIteratorObjByIdx(CIterableObjByIdx<T>* subject): m_subject(subject), m_idx(0) {}
+   virtual void Reset() { m_idx = 0; }
+   virtual void AfterDelete(int pos) {
+      if (pos < m_idx) m_idx--;
+   }
    virtual bool HasNext() {
       return m_idx < m_subject.Total();
    }
@@ -112,6 +117,10 @@ private:
    CIterablePrimitiveByIdx<T>* m_subject;
 public:
    CIteratorPrimitiveByIdx(CIterablePrimitiveByIdx<T>* subject): m_subject(subject), m_idx(0) {}
+   virtual void Reset() { m_idx = 0; }
+   virtual void AfterDelete(int pos) {
+      if (pos < m_idx) m_idx--;
+   }
    virtual bool HasNext() {
       return m_idx < m_subject.Total();
    }
@@ -222,6 +231,13 @@ public:
    }
 };
 
+template<typename T>
+int StandardCompare(T thiz, T that) {
+   if (thiz == that) return 0;
+   else if (thiz < that) return -1;
+   else return 1;
+}
+
 
 template<typename T>
 class CSetItem : public CTreeNode {
@@ -235,11 +251,11 @@ public:
       return m_content;
    }
    virtual int Compare(const CObject *node,const int mode=0) const {
-      return m_content.Compare(((CSetItem*)node).m_content,mode);
+      return m_content.Compare(((CSetItem<T>*)node).m_content,mode);
    }
 };
 
-template<typename T>
+/*template<typename T>
 class CSetObj : public CObject {
 private:
    CTree m_arr;
@@ -266,9 +282,9 @@ public:
       CSetItem<T>* found = (CSetItem<T>*)m_arr.Find(GetPointer(findItem));
       return found != NULL;
    }
-};
+};*/
 
-class CSetObj_CObject : public CSetObj<CObject> {};
+//class CSetObj_CObject : public CSetObj<CObject> {};
 
 template<typename T>
 class CSetItemPrimitive : public CTreeNode {
@@ -287,7 +303,7 @@ public:
    }
 };
 
-template<typename T>
+/*template<typename T>
 class CSetPrimitive : public CObject {
 private:
    CTree m_arr;
@@ -314,7 +330,117 @@ public:
    void operator+=(const T toAdd) {
       this.Add(toAdd);
    }
+};*/
+
+template<typename T>
+class CSetPrimitive : public CIterablePrimitiveByIdx<T> {
+private:
+   // Create CArrayPrimitive<T> and replace this array with that
+    CArrayObj m_arr;
+    CIteratorPrimitiveByIdx<T> m_iter;
+public:
+   CSetPrimitive(): m_iter(GetPointer(this)) {
+      m_arr.Sort();
+   }
+   virtual int Type(void) const { return(1573847623);}
+   void Add(T val) {
+      CSetItemPrimitive<T>* newEntry = new CSetItemPrimitive<T>(val);
+      int pos = m_arr.Search(newEntry);
+      if (pos != -1) {
+         m_arr.Delete(pos);
+      }
+      m_arr.InsertSort(newEntry);
+   }
+   bool Remove(T val) {
+      CSetItemPrimitive<T> findBy(val);
+      int pos = m_arr.Search(GetPointer(findBy));
+      if (pos != -1) {
+         m_arr.Delete(pos);
+         m_iter.AfterDelete(pos);
+         return true;
+      } else {
+         return false;
+      }
+   }
+   bool Contains(T val) {
+      CSetItemPrimitive<T> findBy(val);
+      int idx = m_arr.Search(GetPointer(findBy));
+      return idx != -1;
+   }
+   virtual int Total() {
+      return m_arr.Total();
+   }
+   virtual T At(int idx) {
+       CSetItemPrimitive<T>* entry = m_arr.At(idx);
+       return entry.GetContent();
+   }
+   virtual CIteratorPrimitive<T>* GetIterator() {
+      m_iter.Reset();
+      return GetPointer(m_iter);
+   }
+   void operator+=(const T toAdd) {
+      this.Add(toAdd);
+   }
 };
+
+template<typename T>
+class CSetObj : public CIterableObjByIdx<T> {
+private:
+   // Create CArrayPrimitive<T> and replace this array with that
+    CArrayObj m_arr;
+    CIteratorObjByIdx<T> m_iter;
+public:
+   CSetObj(): m_iter(GetPointer(this)) {
+      m_arr.Sort();
+   }
+   virtual int Type(void) const { return(1573847623);}
+   void Add(T* val) {
+      CSetItem<T>* newEntry = new CSetItem<T>(val);
+      int pos = m_arr.Search(newEntry);
+      if (pos != -1) {
+         m_arr.Delete(pos);
+      }
+      m_arr.InsertSort(newEntry);
+   }
+   bool Remove(T* val) {
+      CSetItem<T> findBy(val);
+      int pos = m_arr.Search(GetPointer(findBy));
+      if (pos != -1) {
+         m_arr.Delete(pos);
+         m_iter.AfterDelete(pos);
+         return true;
+      } else {
+         return false;
+      }
+   }
+   bool Contains(T* val) {
+      CSetItem<T> findBy(val);
+      int idx = m_arr.Search(GetPointer(findBy));
+      return idx != -1;
+   }
+   T* Find(T* val) {
+      CSetItem<T> findBy(val);
+      int idx = m_arr.Search(GetPointer(findBy));
+      if (idx != -1) {
+         CSetItem<T>* found = m_arr.At(idx);
+         return found.GetContent();
+      } else {
+         return NULL;
+      }
+   }
+   virtual int Total() {
+      return m_arr.Total();
+   }
+   virtual T* At(int idx) {
+       CSetItem<T>* entry = m_arr.At(idx);
+       return entry.GetContent();
+   }
+   virtual CIteratorObj<T>* GetIterator() {
+      m_iter.Reset();
+      return GetPointer(m_iter);
+   }
+};
+
 
 template<typename K,typename T>
 class CEntryPrimitiveObj : public CObject {
@@ -472,6 +598,12 @@ public:
          m_arr.Delete(pos);
       }
    }
+   void Clear() {
+      m_arr.Clear();
+   }
+   bool IsEmpty() {
+      return m_arr.Total() == 0;
+   }
    bool IsKeyPresent(const K key) {
       CEntryPrimitive<K,T> findBy(key,NULL);
       int idx = m_arr.Search(GetPointer(findBy));
@@ -484,6 +616,16 @@ public:
    T GetByIdx(int idx) {
       CEntryPrimitive<K,T>* entry = m_arr.At(idx);
       return entry.GetValue();
+   }
+   bool Get(const K key, T& val) {
+      CEntryPrimitive<K,T> findBy(key,NULL);
+      int idx = m_arr.Search(GetPointer(findBy));
+      if (idx == -1) return false;
+      else {
+         CEntryPrimitive<K,T>* entry = m_arr.At(idx);
+         val = entry.GetValue();
+         return true;
+      }
    }
    T Get(const K key) {
       CEntryPrimitive<K,T> findBy(key,NULL);
@@ -508,60 +650,6 @@ public:
       return this.Get(key);
    }
 };
-
-/* Tested, but performance wasn't as good.
-*
-template<typename T>
-class CObjectComparer: public IComparer<T>
-{
-public:
-   int               Compare(T x,T y) { return x.Compare(y); }
-};
-
-template<typename K,typename T>
-class CMapPrimitiveRedBlack : public CIterablePrimitiveByIdx<T> {
-private:
-   CRedBlackTree<CEntryPrimitive<K,T>*> m_tree;
-    CArrayObjTyped<CEntryPrimitive<K,T>> m_arr;
-public:
-   CMapPrimitiveRedBlack() : m_tree(new CObjectComparer<CEntryPrimitive<K,T>*>()) {
-      m_arr.Sort();
-   }
-   virtual int Type(void) const { return(1573847623);}
-   void Put(K key, T val) {
-      CEntryPrimitive<K,T>* newEntry = new CEntryPrimitive<K,T>(key,val);
-      if (m_tree.Contains(newEntry)) {
-         m_tree.Remove(newEntry);
-      }
-      m_tree.Add(newEntry);
-   }
-   void Remove(const K key) {
-      CEntryPrimitive<K,T> findBy(key,NULL);
-      m_tree.Remove(GetPointer(findBy));
-   }
-   bool IsKeyPresent(const K key) {
-      CEntryPrimitive<K,T> findBy(key,NULL);
-      return m_tree.Contains(GetPointer(findBy));
-   }
-   T Get(const K key) {
-      CEntryPrimitive<K,T> findBy(key,NULL);
-      CRedBlackTreeNode<CEntryPrimitive<K,T>*>* node = m_tree.Find(GetPointer(findBy));
-      if (node == NULL) return NULL;
-      else {
-         return node.Value().GetValue();
-      }
-   }
-   virtual int Total() {
-      return m_tree.Count();
-   }
-   virtual CIteratorPrimitive<T>* GetIterator() {
-      return NULL;
-   }
-   T operator[](K key) {
-      return this.Get(key);
-   }
-};
-*/
 
 template<typename T>
 class CMapStrObj : public CIterableObjByIdx<T> {
@@ -616,4 +704,58 @@ public:
    }
 };
 
+/*
+template<typename K, typename T>
+class CMapPrimitiveObj : public CIterableObjByIdx<T> {
+private:
+    CArrayObj m_arr;
+public:
+   CMapPrimitiveObj() {
+      m_arr.Sort();
+   }
+   virtual int Type(void) const { return(1573847622);}
+   void Put(K key, CObject* val) {
+      CEntryPrimitiveObj<K,T>* newEntry = new CEntryStrObj<T>(key,val);
+      int pos = m_arr.Search(newEntry);
+      if (pos != -1) {
+         m_arr.Delete(pos);
+      }
+      m_arr.InsertSort(newEntry);
+   }
+   void Remove(K key) {
+      CEntryPrimitiveObj<K,T> findBy(key,NULL);
+      int pos = m_arr.Search(GetPointer(findBy));
+      if (pos != -1) {
+         m_arr.Delete(pos);
+      }
+   }
+   bool IsKeyPresent(K key) {
+      CEntryPrimitiveObj<K,T> findBy(key,NULL);
+      int idx = m_arr.Search(GetPointer(findBy));
+      return idx != -1;
+   }
+   T* Get(K key) {
+      CEntryPrimitiveObj<K,T> findBy(key,NULL);
+      int idx = m_arr.Search(GetPointer(findBy));
+      if (idx == -1) return NULL;
+      else {
+         CEntryStrObj<T>* entry = m_arr.At(idx);
+         return entry.GetValue();
+      }
+   }
+   virtual int Total() {
+      return m_arr.Total();
+   }
+   virtual T* At(int idx) {
+       CEntryStrObj<T>* entry = m_arr.At(idx);
+       return entry.GetValue();
+   }
+   virtual CIteratorObj<T>* GetIterator() {
+      return new CIteratorObjByIdx<T>(GetPointer(this));
+   }
+   T* operator[](K key) {
+      return this.Get(key);
+   }
+};
+*/
 

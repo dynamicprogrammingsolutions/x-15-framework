@@ -48,6 +48,11 @@ void __addcomment(const string s1, const string s2, const string s3, const strin
    StringAdd(commentstring,s8);
 };
 
+void __addcomment(const string s1, const string s2, const string s3, const string s4, const string s5, const string s6, const string s7, const string s8, const string s9) {
+   __addcomment(s1,s2,s3,s4,s5,s6,s7,s8);
+   StringAdd(commentstring,s9);
+};
+
 void __addcommentln(const string s1) {
    __addcomment(s1,"\n");
 };
@@ -76,6 +81,10 @@ void __addcommentln(const string s1, const string s2, const string s3, const str
    __addcomment(s1,s2,s3,s4,s5,s6,s7,"\n");
 };
 
+void __addcommentln(const string s1, const string s2, const string s3, const string s4, const string s5, const string s6, const string s7, const string s8) {
+   __addcomment(s1,s2,s3,s4,s5,s6,s7,s8,"\n");
+};
+
 void __writecomment(){
    Comment(commentstring);
 }
@@ -97,9 +106,9 @@ void __donothing() {}
 
 #ifdef DISABLE_COMMENTS
 
-#define addcomment()
-#define addcommentln()
-#define writecomment()
-#define delcomment()
+#define addcomment(s1)
+#define addcommentln(s1)
+#define writecomment(s1)
+#define delcomment(s1)
 
 #endif
