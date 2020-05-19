@@ -7,6 +7,12 @@
 #property link      "https://www.mql5.com"
 #property strict
 
+/*
+Help for replacement:
+print\(([\ a-zA-Z()->\._",:]*\));
+
+*/
+
 #ifndef DISABLE_LOGGING
 #define print(s1) Print s1
 #endif

@@ -11,7 +11,7 @@
          double lots = OrderLots();
          CSymbolImpl __sym(OrderSymbol());
          double price = GetClosePrice(GetPointer(__sym),(ENUM_ORDER_TYPE)OrderType());
-         print("Close position, parameters: tcket: ",ticket," lots: ",lots," price: ",price," slippage: ",req.slippage," ask:",Ask," bid: ",Bid);
+         print(("Close position, parameters: tcket: ",ticket," lots: ",lots," price: ",price," slippage: ",req.slippage," ask:",Ask," bid: ",Bid));
          req.success = OrderClose(ticket,lots,price,req.slippage,clrGray);
          if (! req.success) {
             req.error = GetLastError();
