@@ -32,12 +32,14 @@ public:
    double maxlot;
    double minlot;
    double point;
+   double tickvalue;
    virtual string Name() { return NULL; }
    virtual double Ask() { return 0; }
    virtual double Bid() { return 0; }
    virtual int Spread() { return 0; }
    virtual double TickSize() { return 0; }
    virtual double LotStep() { return 0; }
+   virtual double TickValue() { return 0; }
    virtual double MaxLot() { return 0; }
    virtual double MinLot() { return 0; }
    virtual double Point() { return 0; }
@@ -50,71 +52,20 @@ public:
 #ifdef __MQL4__
 
 
-double GetPrice(CSymbol* symbol, ENUM_ORDER_TYPE order_type) {
-   if (CheckPointer(symbol) == POINTER_INVALID) symbol = __defaultSymbol;
-   switch(order_type) {
-      case ORDER_TYPE_BUY:
-      case ORDER_TYPE_BUY_STOP:
-      case ORDER_TYPE_BUY_LIMIT:
-         return symbol.Ask();
-      case ORDER_TYPE_SELL:
-      case ORDER_TYPE_SELL_STOP:
-      case ORDER_TYPE_SELL_LIMIT:
-         return symbol.Bid();
-      default:
-         return 0;
-   }
-}
-
-double GetClosePrice(CSymbol* symbol, ENUM_ORDER_TYPE order_type) {
-   if (CheckPointer(symbol) == POINTER_INVALID) symbol = __defaultSymbol;
-   switch(order_type) {
-      case ORDER_TYPE_SELL:
-      case ORDER_TYPE_SELL_STOP:
-      case ORDER_TYPE_SELL_LIMIT:
-         return symbol.Ask();
-      case ORDER_TYPE_BUY:
-      case ORDER_TYPE_BUY_STOP:
-      case ORDER_TYPE_BUY_LIMIT:
-         return symbol.Bid();
-      default:
-         return 0;
-   }
-}
-
-double AddToProfit(ENUM_ORDER_TYPE order_type, double price, double diff) {
-   switch(order_type) {
-      case ORDER_TYPE_BUY:
-      case ORDER_TYPE_BUY_STOP:
-      case ORDER_TYPE_BUY_LIMIT:
-         return price + diff;
-      case ORDER_TYPE_SELL:
-      case ORDER_TYPE_SELL_STOP:
-      case ORDER_TYPE_SELL_LIMIT:
-         return price - diff;
-      default:
-         return 0;
-   }
-}
-
-double AddToLoss(ENUM_ORDER_TYPE order_type, double price, double diff) {
-   switch(order_type) {
-      case ORDER_TYPE_BUY:
-      case ORDER_TYPE_BUY_STOP:
-      case ORDER_TYPE_BUY_LIMIT:
-         return price - diff;
-      case ORDER_TYPE_SELL:
-      case ORDER_TYPE_SELL_STOP:
-      case ORDER_TYPE_SELL_LIMIT:
-         return price + diff;
-      default:
-         return 0;
-   }
-}
 
 class CSymbolImpl : public CSymbol {
 public:
    CSymbolImpl(const string _symbol) : CSymbol(_symbol) {}
+   void SetSymbol(const string _symbol) {
+      if (_symbol != this.symbol) {
+         this.symbol = _symbol;
+         ticksize = 0;
+         lotstep = 0;
+         maxlot = 0;
+         minlot = 0;
+         point = 0;
+      }
+   }
    virtual string Name() {
       if (symbol == NULL) return _Symbol;
       else return symbol;
@@ -133,6 +84,10 @@ public:
       if (lotstep==0) lotstep = MarketInfo(symbol,MODE_LOTSTEP);
       return lotstep;
    }
+   virtual double TickValue() {
+      if (tickvalue==0) tickvalue = MarketInfo(symbol,MODE_TICKVALUE);
+      return tickvalue;
+   }
    virtual double MaxLot() {
       if (maxlot==0) maxlot = MarketInfo(symbol,MODE_MAXLOT);
       return maxlot;
@@ -146,7 +101,7 @@ public:
       double result_lots = MathRound(lotsize/step)*step;
       result_lots = MathMax(result_lots,MinLot());
       result_lots = MathMin(result_lots,MaxLot());
-      return lotsize;  
+      return result_lots;  
    }
    virtual int StopLevel() {
       return (int)MarketInfo(symbol,MODE_STOPLEVEL);
@@ -186,4 +141,163 @@ CSymbol* GetDefaultSymbol() {
 int ConvertParamToFractional(CSymbol* symbol, double value) {
    if (symbol.IsFractional()) return (int)(value*10);
    else return (int)value;
+}
+
+
+enum ENUM_STOP_MODE {
+   STOP_MODE_SL,
+   STOP_MODE_TP,
+   STOP_MODE_PROFIT,
+   STOP_MODE_LOSS,
+   STOP_MODE_ENTRY
+};
+
+double GetPrice(CSymbol* symbol, ENUM_ORDER_TYPE order_type) {
+   if (CheckPointer(symbol) == POINTER_INVALID) symbol = __defaultSymbol;
+   switch(order_type) {
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return symbol.Ask();
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return symbol.Bid();
+      default:
+         return 0;
+   }
+}
+
+double GetClosePrice(CSymbol* symbol, ENUM_ORDER_TYPE order_type) {
+   if (CheckPointer(symbol) == POINTER_INVALID) symbol = __defaultSymbol;
+   switch(order_type) {
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return symbol.Ask();
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return symbol.Bid();
+      default:
+         return 0;
+   }
+}
+
+double GetDiffProfit(ENUM_ORDER_TYPE order_type, double price, double priceto) {
+   switch(order_type) {
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return priceto - price;
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return price - priceto;
+      default:
+         return 0;
+   }
+}
+
+double GetDiffLoss(ENUM_ORDER_TYPE order_type, double price, double priceto) {
+   switch(order_type) {
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return price - priceto;
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return priceto - price;
+      default:
+         return 0;
+   }
+}
+
+bool IsProfitReached(CSymbol* symbol, ENUM_ORDER_TYPE order_type, double price) {
+   switch(order_type) {
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return symbol.Bid() >= price;
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return symbol.Ask() <=  price;
+      default:
+         return false;
+   }
+}
+
+double AddToProfit(ENUM_ORDER_TYPE order_type, double price, double diff) {
+   switch(order_type) {
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return price + diff;
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return price - diff;
+      default:
+         return 0;
+   }
+}
+
+double AddToLoss(ENUM_ORDER_TYPE order_type, double price, double diff) {
+   switch(order_type) {
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return price - diff;
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return price + diff;
+      default:
+         return 0;
+   }
+}
+
+
+double AddToStop(ENUM_STOP_MODE stopmode, ENUM_ORDER_TYPE order_type, double price, double diff) {
+   switch (stopmode) {
+      case STOP_MODE_SL:
+      case STOP_MODE_LOSS:
+         return AddToLoss(order_type,price,diff);
+      case STOP_MODE_TP:
+      case STOP_MODE_PROFIT:
+         return AddToProfit(order_type,price,diff);
+      case STOP_MODE_ENTRY:
+         switch(order_type) {
+            case ORDER_TYPE_BUY_STOP:
+            case ORDER_TYPE_SELL_STOP:
+               return AddToProfit(order_type,price,diff);
+            case ORDER_TYPE_BUY_LIMIT:
+            case ORDER_TYPE_SELL_LIMIT:
+               return AddToLoss(order_type,price,diff);
+         }
+   }
+   return 0;
+}
+
+double GetDiff(ENUM_STOP_MODE stopmode, ENUM_ORDER_TYPE order_type, double price, double priceto) {
+   switch (stopmode) {
+      case STOP_MODE_SL:
+      case STOP_MODE_LOSS:
+         return GetDiffLoss(order_type,price,priceto);
+      case STOP_MODE_TP:
+      case STOP_MODE_PROFIT:
+         return GetDiffProfit(order_type,price,priceto);
+      case STOP_MODE_ENTRY:
+         switch(order_type) {
+            case ORDER_TYPE_BUY_STOP:
+            case ORDER_TYPE_SELL_STOP:
+               return GetDiffProfit(order_type,price,priceto);
+            case ORDER_TYPE_BUY_LIMIT:
+            case ORDER_TYPE_SELL_LIMIT:
+               return GetDiffLoss(order_type,price,priceto);
+         }
+   }
+   return 0;
 }

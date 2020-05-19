@@ -1,17 +1,19 @@
 #property strict
 
-class CPendingOrderDetails {
+#include "..\symbols.mqh"
+
+class CPositionDetails {
 public:
     virtual long GetId() {
         return -1;
     }
-    virtual ENUM_ORDER_TYPE GetOrderType() {
+    virtual ENUM_ORDER_TYPE GetPositionType() {
         return -1;
     }
     virtual int GetMagic() {
         return -1;
     }
-    virtual datetime GetOrderTime() {
+    virtual datetime GetEntryTime() {
         return 0;
     }
     virtual double GetEntryPrice() {
@@ -23,13 +25,13 @@ public:
     virtual double GetStoploss() {
         return -1;
     }
-    virtual datetime GetExpiration() {
-        return -1;
-    }
     virtual string GetComment() {
         return NULL;
     }
     virtual string GetSymbol() {
+        return NULL;
+    }
+    virtual CSymbol* GetCSymbol() {
         return NULL;
     }
 };

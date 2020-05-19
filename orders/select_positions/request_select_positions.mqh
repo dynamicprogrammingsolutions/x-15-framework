@@ -3,12 +3,12 @@
 #include "..\order_request_base.mqh"
 #include "..\order_request_codes.mqh"
 #include "..\symbols.mqh"
-#include "..\share\pending_order_details.mqh"
 #include "..\..\collections.mqh"
+#include "..\share\position_details.mqh"
 
-typedef void(*SelectPendingOrdersCallbackFunc)(CPendingOrderDetails* details, void* obj);
+typedef void(*SelectPositionsCallbackFunc)(CPositionDetails* details, void* obj);
 
-class CRequestSelectOrders : public CRequest {
+class CRequestSelectPositions : public CRequest {
 
 public:
    bool count_only;
@@ -18,13 +18,13 @@ public:
    int filter;
    int magic;
    int cnt;
-   SelectPendingOrdersCallbackFunc callback;
+   SelectPositionsCallbackFunc callback;
    void* callback_obj;
-   CIteratorObj<CPendingOrderDetails>* iterator;
+   CIteratorObj<CPositionDetails>* iterator;
 
    virtual int Type() { return ORDER_REQUEST_SELECT_ORDERS; }
    
-   CRequestSelectOrders():
+   CRequestSelectPositions():
       filter_by_symbol(true),
       filter_by_magic(true),
       symbol(NULL),
@@ -37,7 +37,7 @@ public:
       count_only(false)
    {}
    
-   CRequestSelectOrders(CRequestSelectOrders* other):
+   CRequestSelectPositions(CRequestSelectPositions* other):
       filter_by_symbol(other.filter_by_symbol),
       filter_by_magic(other.filter_by_magic),
       symbol(other.symbol),
@@ -50,7 +50,7 @@ public:
       count_only(other.count_only)
    {}
    
-   CRequestSelectOrders(CRequestSelectOrders& other):
+   CRequestSelectPositions(CRequestSelectPositions& other):
       filter_by_symbol(other.filter_by_symbol),
       filter_by_magic(other.filter_by_magic),
       symbol(other.symbol),
@@ -64,5 +64,3 @@ public:
    {}
 
 };
-
-

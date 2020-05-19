@@ -8,11 +8,11 @@
 #property strict
 
 #ifndef DISABLE_LOGGING
-#define print Print
+#define print(s1) Print s1
 #endif
 
 #ifdef DISABLE_LOGGING
-#define print()
+#define print(s1)
 #endif
 
 #ifndef DISABLE_ALERTS
@@ -24,11 +24,26 @@
 #endif
 
 #ifdef ENABLE_DEBUG
-#define debug Print
-#define debugl(s1) Print s1
+#define debug(s1) Print s1
 #endif
 
 #ifndef ENABLE_DEBUG
-#define debug()
+#define debug(s1)
+
+#endif
+
+#ifdef FILTER_DEBUG
+
+#ifdef ENABLE_DEBUG
+#define debug(s1) { string __msg = StringConcatenate s1; if (FILTER_DEBUG(__msg)) { Print(__msg); } }
+#endif
+
+#endif
+
+#ifdef FILTER_LOG
+
+#ifndef DISABLE_LOGGING
+#define print(s1) { string __msg = StringConcatenate s1; if (FILTER_LOG(__msg)) { Print(__msg); } }
+#endif
 
 #endif

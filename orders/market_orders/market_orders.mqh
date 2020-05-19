@@ -8,13 +8,15 @@
    bool __order_by_market = false;
    void OpenMarket(CRequestOpenMarket* req) {
       int ret = -1;
+      req.success = false;
       if (!__order_by_market) {
          ret = OrderSend(req.symbol.symbol,req.order_type,req.volume,GetPrice(req.symbol,req.order_type),req.slippage,req.sl,req.tp,req.comment,req.magic);
          if (ret <= 0) {
-         req.error = GetLastError();
-      } else {
-         req.ticket = ret;
-      }
+            req.error = GetLastError();
+         } else {
+            req.success = true;
+            req.ticket = ret;
+         }
       } else {
          ret = OrderSend(req.symbol.symbol,req.order_type,req.volume,GetPrice(req.symbol,req.order_type),req.slippage,0,0,req.comment,req.magic);
          if (ret <= 0) {
@@ -23,6 +25,8 @@
             req.ticket = ret;
             if (!OrderModify(req.ticket,0,req.sl,req.tp,0)) {
                req.error = GetLastError();
+            } else {
+               req.success = true;
             }
          }
       }

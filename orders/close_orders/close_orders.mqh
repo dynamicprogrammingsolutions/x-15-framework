@@ -20,7 +20,7 @@
                int ticket = OrderTicket();
                double lots = OrderLots();
                double price = GetClosePrice(req.symbol,(ENUM_ORDER_TYPE)OrderType());
-               print("Close position, parameters: tcket: ",ticket," lots: ",lots," price: ",price," slippage: ",req.slippage," ask:",Ask," bid: ",Bid);
+               print(("Close position, parameters: tcket: ",ticket," lots: ",lots," price: ",price," slippage: ",req.slippage," ask:",Ask," bid: ",Bid));
                bool success = OrderClose(ticket,lots,price,req.slippage,clrGray);
                int error = -1;
                if (!success) {

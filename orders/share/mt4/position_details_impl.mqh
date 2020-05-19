@@ -2,20 +2,22 @@
 
 #ifdef __MQL4__
 
-#include "..\pending_order_details.mqh"
+#include "..\position_details.mqh"
 
-class CPendingOrderDetailsImpl : public CPendingOrderDetails {
+class CPositionDetailsImpl : public CPositionDetails {
+     CSymbolImpl m_symbol;
 public:
+     CPositionDetailsImpl(): m_symbol(NULL) {}
      virtual long GetId() {
          return OrderTicket();
      }
-     virtual ENUM_ORDER_TYPE GetOrderType() {
+     virtual ENUM_ORDER_TYPE GetPositionType() {
          return OrderType();
      }
      virtual int GetMagic() {
          return OrderMagicNumber();
      }
-     virtual datetime GetOrderTime() {
+     virtual datetime GetEntryTime() {
         return OrderOpenTime();
     }
      virtual double GetEntryPrice() {
@@ -35,7 +37,11 @@ public:
      }
      virtual string GetSymbol() {
          return OrderSymbol();
-     } 
+     }
+     virtual CSymbol* GetCSymbol() {
+         m_symbol.SetSymbol(OrderSymbol());
+         return GetPointer(m_symbol);
+     }
 };
 
 #endif

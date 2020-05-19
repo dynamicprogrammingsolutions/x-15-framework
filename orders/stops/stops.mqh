@@ -1,53 +1,9 @@
 #property strict
 
 #include "..\order_processor_register.mqh"
-#include "..\market_orders\request_market_orders.mqh"
-#include "..\pending_orders\request_pending_orders.mqh"
-
-enum ENUM_STOP_MODE {
-   STOP_MODE_SL,
-   STOP_MODE_TP,
-   STOP_MODE_ENTRY
-};
-
-class CStop {
-public:
-   virtual double Calculate(CRequest* request, ENUM_STOP_MODE stopmode) {
-      return 0;
-   }
-};
-
-double AddToStop(ENUM_STOP_MODE stopmode, ENUM_ORDER_TYPE order_type, double price, double diff) {
-   switch (stopmode) {
-      case STOP_MODE_SL:
-         return AddToLoss(order_type,price,diff);
-      case STOP_MODE_TP:
-         return AddToProfit(order_type,price,diff);
-      case STOP_MODE_ENTRY:
-         switch(order_type) {
-            case ORDER_TYPE_BUY_STOP:
-            case ORDER_TYPE_SELL_STOP:
-               return AddToProfit(order_type,price,diff);
-            case ORDER_TYPE_BUY_LIMIT:
-            case ORDER_TYPE_SELL_LIMIT:
-               return AddToLoss(order_type,price,diff);
-         }
-   }
-   return 0;
-}
-
-class CRequestOpenMarketWithStops : public CRequestOpenMarket {
-public:
-   CStop* slcalc;
-   CStop* tpcalc;
-};
-
-class CRequestOpenPendingWithStops : public CRequestOpenPending {
-public:
-   CStop* slcalc;
-   CStop* tpcalc;
-   CStop* entrycalc;
-};
+#include "request_with_stops.mqh"
+#include "stopcalc.mqh"
+#include "..\..\logger.mqh"
 
 void OrderProcessorStops(int request, void* parameters, COrderProcessor* next) {
    if (request == ORDER_REQUEST_OPEN_MARKET) {
@@ -56,10 +12,12 @@ void OrderProcessorStops(int request, void* parameters, COrderProcessor* next) {
          req.current_price = GetPrice(req.symbol,req.order_type);
          req.price = req.current_price;
          if (CheckPointer(req.slcalc) != POINTER_INVALID) {
-            req.sl = req.slcalc.Calculate(req,STOP_MODE_SL);
+            double sl;
+            if (req.slcalc.Calculate(req,STOP_MODE_SL,sl)) req.sl = sl;
          }
          if (CheckPointer(req.tpcalc) != POINTER_INVALID) {
-            req.tp = req.tpcalc.Calculate(req,STOP_MODE_TP);
+            double tp;
+            if (req.tpcalc.Calculate(req,STOP_MODE_TP,tp)) req.tp = tp;
          }
       }
       next.ProcessOrder(request,parameters);
@@ -68,16 +26,57 @@ void OrderProcessorStops(int request, void* parameters, COrderProcessor* next) {
       if (req != NULL) {
          req.current_price = GetPrice(req.symbol,req.order_type);
          if (CheckPointer(req.entrycalc) != POINTER_INVALID) {
-            req.price = req.slcalc.Calculate(req,STOP_MODE_ENTRY);
+            double price;
+            if (req.entrycalc.Calculate(req,STOP_MODE_ENTRY,price)) req.price = price;
          }
          if (CheckPointer(req.slcalc) != POINTER_INVALID) {
-            req.sl = req.slcalc.Calculate(req,STOP_MODE_SL);
+            double sl;
+            if (req.slcalc.Calculate(req,STOP_MODE_SL,sl)) req.sl = sl;
          }
          if (CheckPointer(req.tpcalc) != POINTER_INVALID) {
-            req.tp = req.tpcalc.Calculate(req,STOP_MODE_TP);
+            double tp;
+            if (req.tpcalc.Calculate(req,STOP_MODE_TP,tp)) req.tp = tp;
          }
       }
       next.ProcessOrder(request,parameters);
+   } else if (request == ORDER_REQUEST_MODIFY_PENDING) {
+      CRequestModifyPendingWithStops* req = dynamic_cast<CRequestModifyPendingWithStops*>(parameters);
+      if (req != NULL) {
+         req.current_price = GetPrice(req.symbol,(ENUM_ORDER_TYPE)req.order_details.GetOrderType());
+         bool modify = false;
+         if (CheckPointer(req.entrycalc) != POINTER_INVALID) {
+            req.price = req.order_details.GetEntryPrice();
+            modify = modify || req.entrycalc.Calculate(req,STOP_MODE_ENTRY,req.price);
+         }
+         if (CheckPointer(req.slcalc) != POINTER_INVALID) {
+            req.sl = req.order_details.GetStoploss();
+            modify = modify || req.slcalc.Calculate(req,STOP_MODE_SL,req.sl);
+         }
+         if (CheckPointer(req.tpcalc) != POINTER_INVALID) {
+            req.tp = req.order_details.GetTakeprofit();
+            modify = modify || req.tpcalc.Calculate(req,STOP_MODE_TP,req.tp);
+         }
+         if (modify) next.ProcessOrder(request,parameters);
+      } else {
+         next.ProcessOrder(request,parameters);
+      }
+   } else if (request == ORDER_REQUEST_MODIFY_MARKET) {
+      CRequestModifyPositionWithStops* req = dynamic_cast<CRequestModifyPositionWithStops*>(parameters);
+      if (req != NULL) {
+         req.current_price = GetPrice(req.symbol,(ENUM_ORDER_TYPE)req.position_details.GetPositionType());
+         bool modify = false;
+         if (CheckPointer(req.slcalc) != POINTER_INVALID) {
+            req.sl = req.position_details.GetStoploss();
+            modify = modify || req.slcalc.Calculate(req,STOP_MODE_SL,req.sl);
+         }
+         if (CheckPointer(req.tpcalc) != POINTER_INVALID) {
+            req.tp = req.position_details.GetTakeprofit();
+            modify = modify || req.tpcalc.Calculate(req,STOP_MODE_TP,req.tp);
+         }
+         if (modify) next.ProcessOrder(request,parameters);
+      } else {
+         next.ProcessOrder(request,parameters);
+      }
    } else {
       next.ProcessOrder(request,parameters);
    }

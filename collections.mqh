@@ -449,6 +449,9 @@ private:
    T* m_val;
 public:
    CEntryPrimitiveObj(K name, T* val): m_name(name), m_val(val) {}
+   ~CEntryPrimitiveObj() {
+      if (CheckPointer(m_val) == POINTER_DYNAMIC) delete m_val;
+   }
    virtual int Type(void) const { return(124);}
    virtual int Compare(const CObject* node, const int mode = 0) const {
       if (node.Type() == this.Type()) {

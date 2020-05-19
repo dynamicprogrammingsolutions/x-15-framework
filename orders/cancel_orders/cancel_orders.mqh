@@ -18,7 +18,7 @@
                   && FilterOrder(OrderType(),req.filter))
             {
                int ticket = OrderTicket();
-               print("Cancel order, parameters: ticket: ",ticket," ask:",Ask," bid: ",Bid);
+               print(("Cancel order, parameters: ticket: ",ticket," ask:",Ask," bid: ",Bid));
                bool success = OrderDelete(ticket,clrGray);
                int error = -1;
                if (!success) {

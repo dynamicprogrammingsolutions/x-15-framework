@@ -8,8 +8,8 @@ void OrderProcessorMoneyManagement(int request, void* parameters, COrderProcesso
       CRequestOrder* req = dynamic_cast<CRequestOrder*>(parameters);
       if (req != NULL) {
          if (CheckPointer(req.mm) != POINTER_INVALID) {
-            if (req.symbol == NULL) req.symbol = GetDefaultSymbol();
             req.volume = req.symbol.LotRound(req.mm.Calculate(req));
+            print(("calculated volume: ",req.volume));
          }
       }
       next.ProcessOrder(request,parameters);
