@@ -393,6 +393,9 @@ public:
    CSetObj(): m_iter(GetPointer(this)) {
       m_arr.Sort();
    }
+   void FreeMode(bool freemode) {
+      m_arr.FreeMode(freemode);
+   }
    virtual int Type(void) const { return(1573847623);}
    void Add(T* val) {
       CSetItem<T>* newEntry = new CSetItem<T>(val);
@@ -487,6 +490,9 @@ public:
          return EMPTY_VALUE;
       }
    }
+   virtual K GetKey() {
+      return m_name;
+   }
    virtual T GetValue() {
       return m_val;
    }
@@ -577,7 +583,7 @@ class CArrayObjTyped : public CArrayObj {
 };
 
 template<typename K,typename T>
-class CMapPrimitive : public CIterablePrimitiveByIdx<T> {
+class CMapPrimitive : public CIterablePrimitiveByIdx<K> {
 private:
    
    CArrayObjTyped<CEntryPrimitive<K,T>> m_arr;
@@ -642,12 +648,12 @@ public:
    virtual int Total() {
       return m_arr.Total();
    }
-   virtual T At(int idx) {
+   virtual K At(int idx) {
        CEntryPrimitive<K,T>* entry = m_arr.At(idx);
-       return entry.GetValue();
+       return entry.GetKey();
    }
-   virtual CIteratorPrimitive<T>* GetIterator() {
-      return new CIteratorPrimitiveByIdx<T>(GetPointer(this));
+   virtual CIteratorPrimitive<K>* GetIterator() {
+      return new CIteratorPrimitiveByIdx<K>(GetPointer(this));
    }
    T operator[](K key) {
       return this.Get(key);
