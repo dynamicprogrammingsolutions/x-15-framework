@@ -13,6 +13,9 @@ public:
     virtual int GetMagic() {
         return -1;
     }
+    virtual double GetLotsize() {
+        return -1;
+    }
     virtual datetime GetEntryTime() {
         return 0;
     }
@@ -23,6 +26,12 @@ public:
         return -1;
     }
     virtual double GetStoploss() {
+        return -1;
+    }
+    virtual double GetProfit() {
+        return -1;
+    }
+    virtual double GetClosePrice() {
         return -1;
     }
     virtual string GetComment() {

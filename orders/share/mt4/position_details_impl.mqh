@@ -12,10 +12,13 @@ public:
          return OrderTicket();
      }
      virtual ENUM_ORDER_TYPE GetPositionType() {
-         return OrderType();
+         return (ENUM_ORDER_TYPE)OrderType();
      }
      virtual int GetMagic() {
          return OrderMagicNumber();
+     }
+     virtual double GetLotsize() {
+         return OrderLots();
      }
      virtual datetime GetEntryTime() {
         return OrderOpenTime();
@@ -28,6 +31,12 @@ public:
      }
      virtual double GetStoploss() {
          return OrderStopLoss();
+     }
+     virtual double GetProfit() {
+         return OrderProfit();
+     }
+     virtual double GetClosePrice() {
+         return ::GetClosePrice(this.GetCSymbol(),this.GetPositionType());
      }
      virtual datetime GetExpiration() {
          return OrderExpiration();

@@ -18,8 +18,13 @@
       // need constructing an object at all.
       static CPendingOrderDetailsImpl details;
       if (OrderSelect((int)req.order_id,SELECT_BY_TICKET,MODE_TRADES) && FilterOrder(OrderType(),ORDER_FILTER_PENDING)) {
-         req.success = true;
-         req.details = GetPointer(details);
+         if (OrderCloseTime() == 0) {
+            req.success = true;
+            req.details = GetPointer(details);
+         } else {
+            req.success = false;
+            req.error = 0;
+         }
       } else {
          req.success = false;
          req.error = GetLastError();

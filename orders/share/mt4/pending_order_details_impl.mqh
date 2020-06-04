@@ -10,7 +10,7 @@ public:
          return OrderTicket();
      }
      virtual ENUM_ORDER_TYPE GetOrderType() {
-         return OrderType();
+         return (ENUM_ORDER_TYPE)OrderType();
      }
      virtual int GetMagic() {
          return OrderMagicNumber();

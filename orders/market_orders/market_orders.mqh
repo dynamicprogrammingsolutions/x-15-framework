@@ -45,6 +45,7 @@
 
 void OrderProcessorOpenMarket(int request, void* parameters, COrderProcessor* next) {
    if (request == ORDER_REQUEST_OPEN_MARKET) {
+      Print("open market");
       CRequestOpenMarket* req = parameters;
       OpenMarket(req);
    } else {

@@ -650,6 +650,7 @@ public:
    }
    virtual K At(int idx) {
        CEntryPrimitive<K,T>* entry = m_arr.At(idx);
+       if (entry == NULL) return NULL;
        return entry.GetKey();
    }
    virtual CIteratorPrimitive<K>* GetIterator() {
