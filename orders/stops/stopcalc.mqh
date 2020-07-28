@@ -55,6 +55,9 @@ typedef double (*StopCalcFn_CRequestOrder)(CRequestOrder* req);
 
 typedef bool (*StopCalcFn_CStopRequest)(CStopRequest* stopreq, CRequest* originalreq, double& result);
 
+typedef bool (*StopCalcFn_CStopRequest_WithParams)(void* params, CStopRequest* stopreq, CRequest* originalreq, double& result);
+
+
 class CStopCalcFn_CRequestOrder : public CStop {
    StopCalcFn_CRequestOrder m_fn;
    ENUM_STOP_MODE m_stopmode;
@@ -93,12 +96,40 @@ public:
    }
 };
 
+class CStopCalcFn_CStopRequest_WithParams : public CStop {
+   StopCalcFn_CStopRequest_WithParams m_fn;
+   ENUM_STOP_MODE m_stopmode;
+   void* m_params;
+public:
+   CStopCalcFn_CStopRequest_WithParams(void* params, StopCalcFn_CStopRequest_WithParams fn, ENUM_STOP_MODE stopmode) : m_params(params), m_fn(fn), m_stopmode(stopmode) {}
+   virtual bool Calculate(CRequest* request, ENUM_STOP_MODE stopmode, double& result) {
+      if (stopmode != m_stopmode) return false;
+      if (InstanceOf<CRequestOrder>(request)) {
+         CStopRequest stoprequest((CRequestOrder*)request,m_stopmode);
+         return m_fn(m_params,GetPointer(stoprequest),request,result);
+      } else if (InstanceOf<CRequestModifyPending>(request)) {
+         CStopRequest stoprequest((CRequestModifyPending*)request,m_stopmode);
+         stoprequest.stopmode = m_stopmode;
+         return m_fn(m_params,GetPointer(stoprequest),request,result);
+      } else if (InstanceOf<CRequestModifyPosition>(request)) {
+         CStopRequest stoprequest((CRequestModifyPosition*)request,m_stopmode);
+         stoprequest.stopmode = m_stopmode;
+         return m_fn(m_params,GetPointer(stoprequest),request,result);
+      }
+      return false;
+   }
+};
+
 CStop* GetStopCalc(StopCalcFn_CRequestOrder fn, ENUM_STOP_MODE stopmode) {
    return new CStopCalcFn_CRequestOrder(fn,stopmode);
 }
 
 CStop* GetStopCalc(StopCalcFn_CStopRequest fn, ENUM_STOP_MODE stopmode) {
    return new CStopCalcFn_CStopRequest(fn,stopmode);
+}
+
+CStop* GetStopCalc(void* params, StopCalcFn_CStopRequest_WithParams fn, ENUM_STOP_MODE stopmode) {
+   return new CStopCalcFn_CStopRequest_WithParams(params,fn,stopmode);
 }
 
 

@@ -97,8 +97,8 @@ private:
 public:
    CIteratorObjByIdx(CIterableObjByIdx<T>* subject): m_subject(subject), m_idx(0) {}
    virtual void Reset() { m_idx = 0; }
-   virtual void AfterDelete(int pos) {
-      if (pos < m_idx) m_idx--;
+   virtual void AfterDelete(int pos = -1) {
+      if (pos < 0 || pos < m_idx) m_idx--;
    }
    virtual bool HasNext() {
       return m_idx < m_subject.Total();

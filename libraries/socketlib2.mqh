@@ -57,7 +57,7 @@ bool create_client(string saddr, ushort port, uint& socket) {
    return true;
 }
 
-bool poll_accept(uint accept_handle, uint& client_socket, string& client_addr) {
+bool poll_accept(uint accept_handle, uint& client_socket, string& client_addr, int error_sleep = 0) {
    if (poll_accept(accept_handle, 0, true)) {
       int error;
       ushort port;
@@ -67,10 +67,22 @@ bool poll_accept(uint accept_handle, uint& client_socket, string& client_addr) {
          return true;
       } else {
          Print("Error during accept connection: ",error);
+         if (error_sleep > 0) Sleep(error_sleep);
          return false;
       }
    }
    return false;
+}
+
+bool poll_msg_with_retries(uint receive_handle, int wait_ms, string& msg, int& err, int retries) {
+   int cnt = 0;
+   bool success = false;
+   while (cnt <= retries) {
+      success = poll_msg(receive_handle, wait_ms, msg, err);
+      if (err == 0) break;
+      cnt++;
+   }
+   return success;
 }
 
 bool poll_msg(uint receive_handle, int wait_ms, string& msg, int& err) {
