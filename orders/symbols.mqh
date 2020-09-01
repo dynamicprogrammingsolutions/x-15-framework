@@ -189,11 +189,11 @@ double GetDiffProfit(ENUM_ORDER_TYPE order_type, double price, double priceto) {
       case ORDER_TYPE_BUY:
       case ORDER_TYPE_BUY_STOP:
       case ORDER_TYPE_BUY_LIMIT:
-         return priceto - price;
+         return NormalizeDouble(priceto - price,8);
       case ORDER_TYPE_SELL:
       case ORDER_TYPE_SELL_STOP:
       case ORDER_TYPE_SELL_LIMIT:
-         return price - priceto;
+         return NormalizeDouble(price - priceto,8);
       default:
          return 0;
    }
@@ -204,11 +204,11 @@ double GetDiffLoss(ENUM_ORDER_TYPE order_type, double price, double priceto) {
       case ORDER_TYPE_BUY:
       case ORDER_TYPE_BUY_STOP:
       case ORDER_TYPE_BUY_LIMIT:
-         return price - priceto;
+         return NormalizeDouble(price - priceto,8);
       case ORDER_TYPE_SELL:
       case ORDER_TYPE_SELL_STOP:
       case ORDER_TYPE_SELL_LIMIT:
-         return priceto - price;
+         return NormalizeDouble(priceto - price,8);
       default:
          return 0;
    }

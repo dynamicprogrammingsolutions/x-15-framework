@@ -1,7 +1,7 @@
 #property strict
 
 #include "..\ptr.mqh"
-
+#include "..\logger.mqh"
 #import "SocketLib2.dll"
 
 void delete_all_socket(int ignored);
@@ -39,7 +39,7 @@ bool create_server(string saddr, ushort port, int queue_size, uint& socket) {
    int err;
    socket = create_server(addr,port,queue_size,err);
    if (socket == 0) {
-      Print("Couldn't create server, error: ",err);
+      print(("Couldn't create server, error: ",err));
       return false;
    }
    return true;
@@ -51,7 +51,7 @@ bool create_client(string saddr, ushort port, uint& socket) {
    int err;
    socket = create_client(addr,port,err);
    if (socket == 0) {
-      Print("Couldn't create client, error: ",err);
+      print(("Couldn't create client, error: ",err));
       return false;
    }
    return true;
@@ -66,7 +66,7 @@ bool poll_accept(uint accept_handle, uint& client_socket, string& client_addr, i
          client_addr = CharArrayToString(addr,0,WHOLE_ARRAY,CP_UTF8);
          return true;
       } else {
-         Print("Debug log: Error during accept connection: ",error);
+         debug(("Debug log: Error during accept connection: ",error));
          if (error_sleep > 0) Sleep(error_sleep);
          return false;
       }
@@ -95,7 +95,6 @@ bool poll_msg(uint receive_handle, int wait_ms, string& msg, int& err, bool& is_
          msg = CharArrayToString(msg_buf,0,WHOLE_ARRAY,CP_UTF8);
          return true;
       } else {
-         //Print("Debug log: Error during receive: ",err);
          is_error = true;
          return false;
       }
@@ -105,7 +104,7 @@ bool poll_msg(uint receive_handle, int wait_ms, string& msg, int& err, bool& is_
 
 bool send_msg(uint send_handle, const string msg) {
    if (StringLen(msg) >= 1024) {
-      Print("Message too large");
+      print(("Message too large"));
       return false;
    }
    uchar msg_buf[1024];

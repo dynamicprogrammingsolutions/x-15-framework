@@ -103,7 +103,6 @@ public:
         }
     }
     void RunConnected(T& out) {
-        //Print("RunConnected: "+this.GetClassName());
         if (Trigger(out)) {
             RunTrigger(out);
         }

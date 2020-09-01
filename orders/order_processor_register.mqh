@@ -9,6 +9,7 @@
 
 #include "..\ptr.mqh"
 #include "..\objecttools.mqh"
+#include "..\logger.mqh"
 
 class COrderProcessor {
 public:
@@ -138,7 +139,7 @@ public:
       if (CheckPointer(m_order_processor) != POINTER_INVALID) {
          m_order_processor.ProcessOrder(request,parameters);
       } else {
-         Print("no processor");
+         debug(("no processor"));
       }
    }
 } __OrderProcessorChain;

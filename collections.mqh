@@ -247,6 +247,11 @@ private:
 public:
    CSetItem(T* content): m_content(content), m_free_mode(false) {}
    CSetItem(T* content, bool free_mode): m_content(content), m_free_mode(free_mode) {}
+   ~CSetItem() {
+      if (m_free_mode && CheckPointer(m_content) == POINTER_DYNAMIC) {
+         delete m_content;
+      }
+   }
    T* GetContent() {
       return m_content;
    }
@@ -389,16 +394,17 @@ private:
    // Create CArrayPrimitive<T> and replace this array with that
     CArrayObj m_arr;
     CIteratorObjByIdx<T> m_iter;
+    bool m_free_mode;
 public:
-   CSetObj(): m_iter(GetPointer(this)) {
+   CSetObj(): m_iter(GetPointer(this)), m_free_mode(true) {
       m_arr.Sort();
    }
    void FreeMode(bool freemode) {
-      m_arr.FreeMode(freemode);
+      m_free_mode = freemode;
    }
    virtual int Type(void) const { return(1573847623);}
    void Add(T* val) {
-      CSetItem<T>* newEntry = new CSetItem<T>(val);
+      CSetItem<T>* newEntry = new CSetItem<T>(val,m_free_mode);
       int pos = m_arr.Search(newEntry);
       if (pos != -1) {
          m_arr.Delete(pos);
@@ -587,8 +593,9 @@ class CMapPrimitive : public CIterablePrimitiveByIdx<K> {
 private:
    
    CArrayObjTyped<CEntryPrimitive<K,T>> m_arr;
+   CIteratorPrimitiveByIdx<K> m_iter;
 public:
-   CMapPrimitive() {
+   CMapPrimitive(): m_iter(GetPointer(this)) {
       m_arr.Sort();
    }
    virtual int Type(void) const { return(1573847623);}
@@ -654,7 +661,8 @@ public:
        return entry.GetKey();
    }
    virtual CIteratorPrimitive<K>* GetIterator() {
-      return new CIteratorPrimitiveByIdx<K>(GetPointer(this));
+      m_iter.Reset();
+      return GetPointer(m_iter);
    }
    T operator[](K key) {
       return this.Get(key);
