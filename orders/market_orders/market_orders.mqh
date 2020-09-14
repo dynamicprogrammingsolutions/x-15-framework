@@ -10,6 +10,7 @@
       int ret = -1;
       req.success = false;
       if (!__order_by_market) {
+         debug(("Sending order ",req.symbol," ",req.order_type," magic: ",req.magic))
          ret = OrderSend(req.symbol.symbol,req.order_type,req.volume,GetPrice(req.symbol,req.order_type),req.slippage,req.sl,req.tp,req.comment,req.magic);
          if (ret <= 0) {
             req.error = GetLastError();
@@ -18,6 +19,7 @@
             req.ticket = ret;
          }
       } else {
+         debug(("Sending order ",req.symbol," ",req.order_type," magic: ",req.magic))
          ret = OrderSend(req.symbol.symbol,req.order_type,req.volume,GetPrice(req.symbol,req.order_type),req.slippage,0,0,req.comment,req.magic);
          if (ret <= 0) {
             req.error = GetLastError();

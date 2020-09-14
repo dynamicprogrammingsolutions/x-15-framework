@@ -95,7 +95,11 @@ string strcsv_get(string& text, string delimiter = ",")
    else
    {
       int limlen = StringLen(delimiter);
-      ret = StringSubstr(text,0,pos);
+      if (pos == 0) {
+         ret = "";
+      } else {
+         ret = StringSubstr(text,0,pos);
+      }
       text = StringSubstr(text,pos+limlen,StringLen(text)-pos-limlen);
       return(ret);
    }

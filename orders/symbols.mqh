@@ -7,6 +7,8 @@
 #property link      "https://www.mql5.com"
 #property strict
 
+#include "..\logger.mqh"
+
 #ifndef FRACTIONAL_TRESHOLD
 #define FRACTIONAL_TRESHOLD 50000
 #endif
@@ -55,7 +57,9 @@ public:
 
 class CSymbolImpl : public CSymbol {
 public:
-   CSymbolImpl(const string _symbol) : CSymbol(_symbol) {}
+   CSymbolImpl(const string _symbol) : CSymbol(_symbol) {
+      if (_symbol == "") symbol = NULL;
+   }
    void SetSymbol(const string _symbol) {
       if (_symbol != this.symbol) {
          this.symbol = _symbol;
@@ -74,7 +78,15 @@ public:
    virtual double Bid() { bid = SymbolInfoDouble(symbol,SYMBOL_BID); return bid; }
    virtual double TickSize() {
       if (ticksize==0) ticksize = MarketInfo(symbol,MODE_TICKSIZE);
-      return ticksize;
+      if (ticksize == 0) {
+         print(("Invalid ticksize for symbol "+symbol));
+         return 1;
+      } else {
+         return ticksize;
+      }
+   }
+   virtual int InTicks(double price) {
+      return (int)MathRound(price/this.TickSize());
    }
    virtual double Point() {
       if (point==0) point = SymbolInfoDouble(symbol,SYMBOL_POINT);
@@ -110,8 +122,8 @@ public:
       return (int)MarketInfo(symbol,MODE_SPREAD);
    }
    virtual double PriceRound(const double price) {
-      double ticksie = TickSize();
-      return MathRound(price/ticksize)*ticksize;
+      double __ticksize = TickSize();
+      return NormalizeDouble(((int)MathRound(price/__ticksize))*__ticksize,(int)MarketInfo(symbol,MODE_DIGITS));
    }
    virtual bool IsFractional() {
       return Bid()/TickSize() > FRACTIONAL_TRESHOLD;
