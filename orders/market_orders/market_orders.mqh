@@ -1,8 +1,8 @@
 #property strict
 
-#include "..\order_processor_register.mqh"
+#include "../order_processor_register.mqh"
 #include "request_market_orders.mqh"
-#include "..\symbols.mqh"
+#include "../symbols.mqh"
 
 #ifdef __MQL4__
    bool __order_by_market = false;

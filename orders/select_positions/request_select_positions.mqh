@@ -1,10 +1,10 @@
 #property strict
 
-#include "..\order_request_base.mqh"
-#include "..\order_request_codes.mqh"
-#include "..\symbols.mqh"
-#include "..\..\collections.mqh"
-#include "..\share\position_details.mqh"
+#include "../order_request_base.mqh"
+#include "../order_request_codes.mqh"
+#include "../symbols.mqh"
+#include "../../collections.mqh"
+#include "../share/position_details.mqh"
 
 typedef void(*SelectPositionsCallbackFunc)(CPositionDetails* details, void* obj);
 

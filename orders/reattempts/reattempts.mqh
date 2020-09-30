@@ -1,13 +1,13 @@
-#include "..\order_request_codes.mqh"
-#include "..\order_processor_register.mqh"
-#include "..\..\objecttools.mqh"
-#include "..\market_orders\request_market_orders.mqh"
-#include "..\pending_orders\request_pending_orders.mqh"
-#include "..\modify_pending_order\request_modify_pending_order.mqh"
-#include "..\modify_position\request_modify_position.mqh"
-#include "..\close_position\request_close_position.mqh"
-#include "..\share\errordescription.mqh"
-#include "..\..\logger.mqh"
+#include "../order_request_codes.mqh"
+#include "../order_processor_register.mqh"
+#include "../../objecttools.mqh"
+#include "../market_orders/request_market_orders.mqh"
+#include "../pending_orders/request_pending_orders.mqh"
+#include "../modify_pending_order/request_modify_pending_order.mqh"
+#include "../modify_position/request_modify_position.mqh"
+#include "../close_position/request_close_position.mqh"
+#include "../share/errordescription.mqh"
+#include "../../logger.mqh"
 
 int __reattempts = 10;
 int __reattempt_sleep = 500;

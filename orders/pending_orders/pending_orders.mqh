@@ -1,8 +1,8 @@
 #property strict
 
-#include "..\order_processor_register.mqh"
+#include "../order_processor_register.mqh"
 #include "request_pending_orders.mqh"
-#include "..\..\logger.mqh"
+#include "../../logger.mqh"
 
 #ifdef __MQL4__
    

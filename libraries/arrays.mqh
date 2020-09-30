@@ -1,8 +1,3 @@
-//+------------------------------------------------------------------+
-//|                                              commonfunctions.mqh |
-//|                        Copyright 2011, MetaQuotes Software Corp. |
-//|                                              http://www.mql5.com |
-//+------------------------------------------------------------------+
 #include <Object.mqh>
 
 void array_increase_double(double& array[], int size, double initial_value = 0) {

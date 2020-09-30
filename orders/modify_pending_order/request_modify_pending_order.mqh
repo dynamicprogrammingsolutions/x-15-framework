@@ -1,10 +1,10 @@
 #property strict
 
-#include "..\order_request_base.mqh"
-#include "..\order_request_codes.mqh"
-#include "..\symbols.mqh"
-#include "..\share\pending_order_details.mqh"
-#include "..\share\face_request_error.mqh"
+#include "../order_request_base.mqh"
+#include "../order_request_codes.mqh"
+#include "../symbols.mqh"
+#include "../share/pending_order_details.mqh"
+#include "../share/face_request_error.mqh"
 
 class CRequestModifyPending : public CRequest {
 public:

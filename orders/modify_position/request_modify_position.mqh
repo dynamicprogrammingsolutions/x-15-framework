@@ -1,11 +1,11 @@
 #property strict
 
 
-#include "..\order_request_base.mqh"
-#include "..\order_request_codes.mqh"
-#include "..\symbols.mqh"
-#include "..\share\position_details.mqh"
-#include "..\share\face_request_error.mqh"
+#include "../order_request_base.mqh"
+#include "../order_request_codes.mqh"
+#include "../symbols.mqh"
+#include "../share/position_details.mqh"
+#include "../share/face_request_error.mqh"
 
 class CRequestModifyPosition : public CRequest {
 public:

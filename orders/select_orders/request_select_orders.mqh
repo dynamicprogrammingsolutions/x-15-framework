@@ -1,10 +1,10 @@
 #property strict
 
-#include "..\order_request_base.mqh"
-#include "..\order_request_codes.mqh"
-#include "..\symbols.mqh"
-#include "..\share\pending_order_details.mqh"
-#include "..\..\collections.mqh"
+#include "../order_request_base.mqh"
+#include "../order_request_codes.mqh"
+#include "../symbols.mqh"
+#include "../share/pending_order_details.mqh"
+#include "../../collections.mqh"
 
 typedef void(*SelectPendingOrdersCallbackFunc)(CPendingOrderDetails* details, void* obj);
 

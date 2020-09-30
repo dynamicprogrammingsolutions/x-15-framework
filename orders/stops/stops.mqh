@@ -1,9 +1,9 @@
 #property strict
 
-#include "..\order_processor_register.mqh"
+#include "../order_processor_register.mqh"
 #include "request_with_stops.mqh"
 #include "stopcalc.mqh"
-#include "..\..\logger.mqh"
+#include "../../logger.mqh"
 
 void OrderProcessorStops(int request, void* parameters, COrderProcessor* next) {
    if (request == ORDER_REQUEST_OPEN_MARKET) {

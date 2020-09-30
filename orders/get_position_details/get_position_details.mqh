@@ -1,8 +1,8 @@
 #property strict
 
-#include "..\order_processor_register.mqh"
+#include "../order_processor_register.mqh"
 #include "request_get_position_details.mqh"
-#include "..\share\order_filters.mqh"
+#include "../share/order_filters.mqh"
 
 #ifdef __MQL4__
 

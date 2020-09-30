@@ -2,7 +2,7 @@
 
 #ifdef __MQL4__
 
-#include "..\position_details.mqh"
+#include "../position_details.mqh"
 
 class CPositionDetailsImpl : public CPositionDetails {
      CSymbolImpl m_symbol;

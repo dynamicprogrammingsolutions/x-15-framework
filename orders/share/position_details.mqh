@@ -1,6 +1,6 @@
 #property strict
 
-#include "..\symbols.mqh"
+#include "../symbols.mqh"
 
 class CPositionDetails {
 public:

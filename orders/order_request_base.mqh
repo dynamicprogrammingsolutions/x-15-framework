@@ -7,7 +7,7 @@
 #property link      "https://www.mql5.com"
 #property strict
 
-#include "..\objecttools.mqh"
+#include "../objecttools.mqh"
 
 class CRequest {
    CLASSNAME

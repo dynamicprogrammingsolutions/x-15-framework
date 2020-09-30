@@ -1,9 +1,9 @@
 #property strict
 
 #include "moneymanagement.mqh"
-#include "..\share\account_info.mqh"
-#include "..\share\request_order.mqh"
-#include "..\..\logger.mqh"
+#include "../share/account_info.mqh"
+#include "../share/request_order.mqh"
+#include "../../logger.mqh"
 
 class CMMRiskEquity : public CMoneyManagement {
 protected:

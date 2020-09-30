@@ -1,5 +1,5 @@
-#include "..\..\signals.mqh"
-#include "..\tickcounter.mqh"
+#include "../../signals.mqh"
+#include "../tickcounter.mqh"
 
 template<typename In, typename Out>
 int filter_trade_only_firsttick(In bar, CSignal<In,Out>* next) {

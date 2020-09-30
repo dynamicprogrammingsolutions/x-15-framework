@@ -1,4 +1,4 @@
-#include "..\..\signals.mqh"
+#include "../../signals.mqh"
 
 class CTradeOnlySignalChangeState {
 public:

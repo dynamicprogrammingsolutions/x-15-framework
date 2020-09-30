@@ -7,8 +7,8 @@
 #property link      "https://www.mql5.com"
 #property strict
 
-#include "..\signals.mqh"
-#include "..\tradesignal.mqh"
+#include "../signals.mqh"
+#include "../tradesignal.mqh"
 
 #define SIGNAL_EXECUTION_RUN 1
 #define SIGNAL_EXECUTION_ONTICK 2

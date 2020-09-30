@@ -1,9 +1,9 @@
 #property strict
 
-#include "..\symbols.mqh"
-#include "..\order_request_codes.mqh"
-#include "..\order_request_base.mqh"
-#include "..\moneymanagement\moneymanagement.mqh"
+#include "../symbols.mqh"
+#include "../order_request_codes.mqh"
+#include "../order_request_base.mqh"
+#include "../moneymanagement/moneymanagement.mqh"
 
 class CRequestOrder : public CRequest {
 public:

@@ -7,9 +7,9 @@
 #property link      "https://www.mql5.com"
 #property strict
 
-#include "..\ptr.mqh"
-#include "..\objecttools.mqh"
-#include "..\logger.mqh"
+#include "../ptr.mqh"
+#include "../objecttools.mqh"
+#include "../logger.mqh"
 
 class COrderProcessor {
 public:

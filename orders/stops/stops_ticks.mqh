@@ -2,9 +2,9 @@
 
 #include "stops.mqh"
 
-#include "..\share\request_order.mqh"
-#include "..\modify_pending_order\modify_pending_order.mqh"
-#include "..\modify_position\modify_position.mqh"
+#include "../share/request_order.mqh"
+#include "../modify_pending_order/modify_pending_order.mqh"
+#include "../modify_position/modify_position.mqh"
 
 class CStopTicks : public CStop {
    int m_ticks;

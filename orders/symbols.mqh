@@ -7,7 +7,7 @@
 #property link      "https://www.mql5.com"
 #property strict
 
-#include "..\logger.mqh"
+#include "../logger.mqh"
 
 #ifndef FRACTIONAL_TRESHOLD
 #define FRACTIONAL_TRESHOLD 50000

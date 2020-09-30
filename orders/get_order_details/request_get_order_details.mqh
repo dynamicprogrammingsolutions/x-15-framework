@@ -1,8 +1,8 @@
 #property strict
 
-#include "..\order_request_base.mqh"
-#include "..\order_request_codes.mqh"
-#include "..\share\pending_order_details.mqh"
+#include "../order_request_base.mqh"
+#include "../order_request_codes.mqh"
+#include "../share/pending_order_details.mqh"
 
 class CRequestGetOrderDetails : public CRequest {
 

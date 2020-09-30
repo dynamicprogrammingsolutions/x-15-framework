@@ -1,8 +1,8 @@
 #property strict
 
-#include "..\order_request_base.mqh"
-#include "..\order_request_codes.mqh"
-#include "..\share\position_details.mqh"
+#include "../order_request_base.mqh"
+#include "../order_request_codes.mqh"
+#include "../share/position_details.mqh"
 
 class CRequestGetPositionDetails : public CRequest {
 

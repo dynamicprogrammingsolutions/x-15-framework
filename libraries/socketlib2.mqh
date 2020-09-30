@@ -1,7 +1,7 @@
 #property strict
 
-#include "..\ptr.mqh"
-#include "..\logger.mqh"
+#include "../ptr.mqh"
+#include "../logger.mqh"
 #import "SocketLib2.dll"
 
 void delete_all_socket(int ignored);

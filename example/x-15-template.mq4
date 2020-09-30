@@ -28,26 +28,26 @@
 
 #define ENABLE_DEBUG
 
-#include <x-15-0.1\main.mqh>
-#include <x-15-0.1\signals.mqh>
-#include <x-15-0.1\tradesignal.mqh>
+#include <x-15-0.1/main.mqh>
+#include <x-15-0.1/signals.mqh>
+#include <x-15-0.1/tradesignal.mqh>
 
-#include <x-15-0.1\orders\market_orders.mqh>
-#include <x-15-0.1\orders\market_orders.mqh>
-#include <x-15-0.1\orders\pending_orders.mqh>
-#include <x-15-0.1\orders\filters.mqh>
-#include <x-15-0.1\orders\stops.mqh>
-#include <x-15-0.1\orders\moneymanagement.mqh>
+#include <x-15-0.1/orders/market_orders.mqh>
+#include <x-15-0.1/orders/market_orders.mqh>
+#include <x-15-0.1/orders/pending_orders.mqh>
+#include <x-15-0.1/orders/filters.mqh>
+#include <x-15-0.1/orders/stops.mqh>
+#include <x-15-0.1/orders/moneymanagement.mqh>
 
-#include <x-15-0.1\comments.mqh>
-#include <x-15-0.1\logger.mqh>
+#include <x-15-0.1/comments.mqh>
+#include <x-15-0.1/logger.mqh>
 
-#include <x-15-0.1\ext\tickcounter.mqh>
-#include <x-15-0.1\ext\filters\trade_only_firsttick.mqh>
-#include <x-15-0.1\ext\filters\trade_only_signal_change.mqh>
-#include <x-15-0.1\ext\signal_data.mqh>
+#include <x-15-0.1/ext/tickcounter.mqh>
+#include <x-15-0.1/ext/filters/trade_only_firsttick.mqh>
+#include <x-15-0.1/ext/filters/trade_only_signal_change.mqh>
+#include <x-15-0.1/ext/signal_data.mqh>
 
-#include <x-15-0.1\collections.mqh>
+#include <x-15-0.1/collections.mqh>
 
 enum ENUM_ENTRY_TYPE {
    ENTRY_LIMIT,
@@ -242,7 +242,7 @@ void OnTick()
    
 }
 
-#include <x-15-0.1\ext\trailing.mqh>
+#include <x-15-0.1/ext/trailing.mqh>
 
 void manage_positions() {
    CIteratorObj<CPositionDetails>* position_iter = get_positions_iterator();

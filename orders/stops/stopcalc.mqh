@@ -1,9 +1,9 @@
 #property strict
 
-#include "..\share\request_order.mqh"
-#include "..\modify_pending_order\request_modify_pending_order.mqh"
-#include "..\modify_position\request_modify_position.mqh"
-#include "..\..\objecttools.mqh"
+#include "../share/request_order.mqh"
+#include "../modify_pending_order/request_modify_pending_order.mqh"
+#include "../modify_position/request_modify_position.mqh"
+#include "../../objecttools.mqh"
 
 /* TODO: create a CStopRequest object, it will contain all the details required to calculate the stops */
 

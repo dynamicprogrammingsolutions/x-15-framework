@@ -1,7 +1,7 @@
 #property strict
 
-#include "..\order_processor_register.mqh"
-#include "..\share\request_order.mqh"
+#include "../order_processor_register.mqh"
+#include "../share/request_order.mqh"
 
 void OrderProcessorMoneyManagement(int request, void* parameters, COrderProcessor* next) {
    if (request == ORDER_REQUEST_OPEN_MARKET || request == ORDER_REQUEST_OPEN_PENDING) {

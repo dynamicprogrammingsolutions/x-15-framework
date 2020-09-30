@@ -2,7 +2,7 @@
 
 #ifdef __MQL4__
 
-#include "..\pending_order_details.mqh"
+#include "../pending_order_details.mqh"
 
 class CPendingOrderDetailsImpl : public CPendingOrderDetails {
    CSymbolImpl m_symbol;

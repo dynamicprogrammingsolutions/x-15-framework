@@ -1,9 +1,9 @@
 #property strict
 
-#include "..\..\logger.mqh"
-#include "..\order_processor_register.mqh"
+#include "../../logger.mqh"
+#include "../order_processor_register.mqh"
 #include "request_close_orders.mqh"
-#include "..\share\orderselect_shared_filters.mqh"
+#include "../share/orderselect_shared_filters.mqh"
 
 #ifdef __MQL4__
    void CloseAll(CRequestCloseAll* req) {

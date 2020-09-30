@@ -1,7 +1,7 @@
 #property strict
 
-#include "..\share\request_order.mqh"
-#include "..\share\face_request_error.mqh"
+#include "../share/request_order.mqh"
+#include "../share/face_request_error.mqh"
 
 class CRequestOpenPending : public CRequestOrder {
 public:

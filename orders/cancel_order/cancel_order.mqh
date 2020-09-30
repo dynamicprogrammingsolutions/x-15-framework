@@ -1,7 +1,7 @@
 #property strict
 
-#include "..\..\logger.mqh"
-#include "..\order_processor_register.mqh"
+#include "../../logger.mqh"
+#include "../order_processor_register.mqh"
 #include "request_cancel_order.mqh"
 
 #ifdef __MQL4__

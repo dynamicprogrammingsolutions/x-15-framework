@@ -1,9 +1,9 @@
 #property strict
 
-#include "..\orders\symbols.mqh"
-#include "..\orders\share\position_details.mqh"
-#include "..\orders\modify_position\request_modify_position.mqh"
-#include "..\orders\order_processor_register.mqh"
+#include "../orders/symbols.mqh"
+#include "../orders/share/position_details.mqh"
+#include "../orders/modify_position/request_modify_position.mqh"
+#include "../orders/order_processor_register.mqh"
 
 typedef bool (*CalcTrailingFunc)(void* params, CSymbol* sym, double in_profit, double sl, double& newsl);
 

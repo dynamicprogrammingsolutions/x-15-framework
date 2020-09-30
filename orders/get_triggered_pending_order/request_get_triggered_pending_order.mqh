@@ -1,7 +1,7 @@
 #property strict
 
-#include "..\order_request_base.mqh"
-#include "..\order_request_codes.mqh"
+#include "../order_request_base.mqh"
+#include "../order_request_codes.mqh"
 
 class CRequestGetTriggeredPendingOrder : public CRequest {
 

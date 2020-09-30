@@ -1,10 +1,10 @@
 #property strict
 
-#include "..\order_processor_register.mqh"
-#include "..\share\request_order.mqh"
-#include "..\modify_pending_order\request_modify_pending_order.mqh"
-#include "..\get_order_details\get_order_details.mqh"
-#include "..\symbols.mqh"
+#include "../order_processor_register.mqh"
+#include "../share/request_order.mqh"
+#include "../modify_pending_order/request_modify_pending_order.mqh"
+#include "../get_order_details/get_order_details.mqh"
+#include "../symbols.mqh"
 
 void OrderProcessorPriceRound(int request, void* parameters, COrderProcessor* next) {
    if (request == ORDER_REQUEST_OPEN_MARKET || request == ORDER_REQUEST_OPEN_PENDING) {

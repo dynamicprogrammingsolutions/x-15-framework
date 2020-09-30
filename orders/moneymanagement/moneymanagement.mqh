@@ -1,6 +1,6 @@
 #property strict
 
-#include "..\order_request_base.mqh"
+#include "../order_request_base.mqh"
 
 class CMoneyManagement {
 public:

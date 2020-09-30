@@ -1,6 +1,6 @@
 #property strict
 
-#include "..\symbols.mqh"
+#include "../symbols.mqh"
 #include "order_filters.mqh"
 
 bool __FilterByMagicNumber(int magic, int filter_magic) {

@@ -1,9 +1,9 @@
 #property strict
 
-#include "..\order_processor_register.mqh"
+#include "../order_processor_register.mqh"
 #include "request_modify_pending_order.mqh"
-#include "..\..\logger.mqh"
-#include "..\share\order_filters.mqh"
+#include "../../logger.mqh"
+#include "../share/order_filters.mqh"
 
 #ifdef __MQL4__
 

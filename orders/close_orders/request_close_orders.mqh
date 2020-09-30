@@ -1,8 +1,8 @@
 #property strict
 
-#include "..\order_request_codes.mqh"
-#include "..\order_request_base.mqh"
-#include "..\symbols.mqh"
+#include "../order_request_codes.mqh"
+#include "../order_request_base.mqh"
+#include "../symbols.mqh"
 
 typedef void (*CloseCallBack)(int order_ticket, bool success, int error);
 

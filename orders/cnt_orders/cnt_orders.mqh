@@ -1,7 +1,7 @@
 #property strict
 
-#include "..\order_processor_register.mqh"
-#include "..\share\orderselect_shared_filters.mqh"
+#include "../order_processor_register.mqh"
+#include "../share/orderselect_shared_filters.mqh"
 #include "request_cnt_orders.mqh"
 
 #ifdef __MQL4__

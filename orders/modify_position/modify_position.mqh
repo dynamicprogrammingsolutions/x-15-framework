@@ -1,8 +1,8 @@
 #property strict
 
-#include "..\order_processor_register.mqh"
+#include "../order_processor_register.mqh"
 #include "request_modify_position.mqh"
-#include "..\..\logger.mqh"
+#include "../../logger.mqh"
 
 #ifdef __MQL4__
    void ModifyPosition(CRequestModifyPosition* req) {

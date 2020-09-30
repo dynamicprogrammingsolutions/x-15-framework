@@ -1,8 +1,8 @@
 #property strict
 
-#include "..\order_request_base.mqh"
-#include "..\order_request_codes.mqh"
-#include "..\symbols.mqh"
+#include "../order_request_base.mqh"
+#include "../order_request_codes.mqh"
+#include "../symbols.mqh"
 
 class CRequestCntOrders : public CRequest {
 
