@@ -1,5 +1,7 @@
 #property strict
 
+#include "..\symbols.mqh"
+
 class CPendingOrderDetails {
 public:
     virtual long GetId() {
@@ -30,6 +32,9 @@ public:
         return NULL;
     }
     virtual string GetSymbol() {
+        return NULL;
+    }
+    virtual CSymbol* GetCSymbol() {
         return NULL;
     }
 };

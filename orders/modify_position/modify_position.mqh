@@ -1,6 +1,5 @@
 #property strict
 
-
 #include "..\order_processor_register.mqh"
 #include "request_modify_position.mqh"
 #include "..\..\logger.mqh"

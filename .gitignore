@@ -1,3 +1,6 @@
 *.kate-swp
 *.mqh:LineFlags
 *.mqh:CursorPos
+*.mq4:LineFlags
+*.mq4:CursorPos
+/.idea

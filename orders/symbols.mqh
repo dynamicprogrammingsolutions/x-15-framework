@@ -155,6 +155,9 @@ int ConvertParamToFractional(CSymbol* symbol, double value) {
    else return (int)value;
 }
 
+double ConvertFractionalParamToPrice(CSymbol* symbol, double value) {
+   return symbol.PriceRound(ConvertParamToFractional(symbol,value)*symbol.TickSize());
+}
 
 enum ENUM_STOP_MODE {
    STOP_MODE_SL,

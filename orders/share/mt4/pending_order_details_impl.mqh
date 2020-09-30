@@ -5,7 +5,9 @@
 #include "..\pending_order_details.mqh"
 
 class CPendingOrderDetailsImpl : public CPendingOrderDetails {
+   CSymbolImpl m_symbol;
 public:
+     CPendingOrderDetailsImpl(): m_symbol(NULL) {}
      virtual long GetId() {
          return OrderTicket();
      }
@@ -35,7 +37,11 @@ public:
      }
      virtual string GetSymbol() {
          return OrderSymbol();
-     } 
+     }
+     virtual CSymbol* GetCSymbol() {
+         m_symbol.SetSymbol(OrderSymbol());
+         return GetPointer(m_symbol);
+     }
 };
 
 #endif
