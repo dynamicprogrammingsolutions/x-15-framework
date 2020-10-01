@@ -31,6 +31,7 @@
 #include <x-15-0.1/orders/market_orders.mqh>
 #include <x-15-0.1/orders/pending_orders.mqh>
 #include <x-15-0.1/orders/filters.mqh>
+#include <x-15-0.1/orders/order_helper_basic.mqh>
 
 #include <x-15-0.1/comments.mqh>
 #include <x-15-0.1/logger.mqh>
@@ -65,7 +66,6 @@ double stoploss_ticks;
 double takeprofit_ticks;
 double entry_ticks;
 
-CSymbol* _symbol;
 CTrailingParamsDefault* tsparams;
 
 int OnInit()
@@ -128,7 +128,7 @@ void OnTick()
 #include <x-15-0.1/ext/trailing.mqh>
 
 void manage_positions() {
-   CIteratorObj<CPositionDetails>* position_iter = get_positions_iterator();
+   CIteratorObj<CPositionDetails>* position_iter = GetPositionsIterator();
    double buyprofit = 0;
    double sellprofit = 0;
    while(position_iter.HasNext()) {
@@ -154,17 +154,6 @@ void manage_positions() {
    }
 }
 
-
-CIteratorObj<CPositionDetails>* get_positions_iterator() {
-   CRequestSelectPositions req;
-   req.filter_by_symbol = true;
-   req.magic = magic;
-   req.symbol = _symbol;
-   req.filter = ORDER_FILTER_MARKET;
-   ProcessOrder(ORDER_REQUEST_SELECT_POSITIONS,GetPointer(req));
-   return req.iterator;
-}
-
 void open_buy() {
    if (open_pending) {
       _open_buy_pending();
@@ -182,88 +171,56 @@ void open_sell() {
 }
 
 void _open_buy_market() {
-   CRequestOpenMarket req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.volume = lotsize;
-   req.order_type = ORDER_TYPE_BUY;
-   double price = GetPrice(req.symbol,req.order_type);
-   req.sl = AddToLoss(req.order_type,price,stoploss_ticks*req.symbol.TickSize());
-   req.tp = AddToProfit(req.order_type,price,takeprofit_ticks*req.symbol.TickSize());
-   ProcessOrder(ORDER_REQUEST_OPEN_MARKET,GetPointer(req));
-   Print("return ticket: ",req.ticket);
+   ENUM_ORDER_TYPE order_type = ORDER_TYPE_BUY;
+   double price = GetPrice(_symbol,order_type);
+   double sl = AddToLoss(order_type,price,stoploss_ticks*_symbol.TickSize());
+   double tp = AddToProfit(order_type,price,takeprofit_ticks*_symbol.TickSize());
+   int ticket = OpenMarketOrder(order_type,lotsize,sl,tp);
+   print(("return ticket: ",ticket));
 }
 
 
 void _open_sell_market() {
-   CRequestOpenMarket req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.volume = lotsize;
-   req.order_type = ORDER_TYPE_SELL;
-   double price = GetPrice(req.symbol,req.order_type);
-   req.sl = AddToLoss(req.order_type,price,stoploss_ticks*req.symbol.TickSize());
-   req.tp = AddToProfit(req.order_type,price,takeprofit_ticks*req.symbol.TickSize());
-   ProcessOrder(ORDER_REQUEST_OPEN_MARKET,GetPointer(req));
-   Print("return ticket: ",req.ticket);
+   ENUM_ORDER_TYPE order_type = ORDER_TYPE_SELL;
+   double price = GetPrice(_symbol,order_type);
+   double sl = AddToLoss(order_type,price,stoploss_ticks*_symbol.TickSize());
+   double tp = AddToProfit(order_type,price,takeprofit_ticks*_symbol.TickSize());
+   int ticket = OpenMarketOrder(order_type,lotsize,sl,tp);
+   print(("return ticket: ",ticket));
 }
 
 void _open_buy_pending() {
-   CRequestOpenPending req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.volume = lotsize;
+   ENUM_ORDER_TYPE order_type;
    switch(pending_entry_type) {
-      case ENTRY_LIMIT: req.order_type = ORDER_TYPE_BUY_LIMIT; break;
-      case ENTRY_STOP: req.order_type = ORDER_TYPE_BUY_STOP; break;
+      case ENTRY_LIMIT: order_type = ORDER_TYPE_BUY_LIMIT; break;
+      case ENTRY_STOP: order_type = ORDER_TYPE_BUY_STOP; break;
    }
-   req.current_price = GetPrice(req.symbol,req.order_type);
-   req.price = AddToStop(STOP_MODE_ENTRY,req.order_type,req.current_price,entry_ticks*req.symbol.TickSize());
-   req.sl = AddToLoss(req.order_type,req.price,stoploss_ticks*req.symbol.TickSize());
-   req.tp = AddToProfit(req.order_type,req.price,takeprofit_ticks*req.symbol.TickSize());
-   ProcessOrder(ORDER_REQUEST_OPEN_PENDING,GetPointer(req));
-   Print("return ticket: ",req.ticket);  
+   double current_price = GetPrice(_symbol,order_type);
+   double price = AddToStop(STOP_MODE_ENTRY,order_type,current_price,entry_ticks*_symbol.TickSize());
+   double sl = AddToLoss(order_type,price,stoploss_ticks*_symbol.TickSize());
+   double tp = AddToProfit(order_type,price,takeprofit_ticks*_symbol.TickSize());
+   OpenPendingOrder(order_type,lotsize,price,sl,tp);
 }
 
 void _open_sell_pending() {
-   CRequestOpenPending req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.volume = lotsize;
+   ENUM_ORDER_TYPE order_type;
    switch(pending_entry_type) {
-      case ENTRY_LIMIT: req.order_type = ORDER_TYPE_SELL_LIMIT; break;
-      case ENTRY_STOP: req.order_type = ORDER_TYPE_SELL_STOP; break;
+      case ENTRY_LIMIT: order_type = ORDER_TYPE_SELL_LIMIT; break;
+      case ENTRY_STOP: order_type = ORDER_TYPE_SELL_STOP; break;
    }
-   req.current_price = GetPrice(req.symbol,req.order_type);
-   req.price = AddToStop(STOP_MODE_ENTRY,req.order_type,req.current_price,entry_ticks*req.symbol.TickSize());
-   req.sl = AddToLoss(req.order_type,req.price,stoploss_ticks*req.symbol.TickSize());
-   req.tp = AddToProfit(req.order_type,req.price,takeprofit_ticks*req.symbol.TickSize());
-   ProcessOrder(ORDER_REQUEST_OPEN_PENDING,GetPointer(req));
-   Print("return ticket: ",req.ticket);  
-}
-
-
-
-void close_callback(int order_ticket, bool success, int error) {
-   if (!success) {
-      Print("close error: ",ErrorDescription(error));
-   }
+   double current_price = GetPrice(_symbol,order_type);
+   double price = AddToStop(STOP_MODE_ENTRY,order_type,current_price,entry_ticks*_symbol.TickSize());
+   double sl = AddToLoss(order_type,price,stoploss_ticks*_symbol.TickSize());
+   double tp = AddToProfit(order_type,price,takeprofit_ticks*_symbol.TickSize());
+   OpenPendingOrder(order_type,lotsize,price,sl,tp);
 }
 
 void close_buy() {
-   CRequestCloseAll req;
-   req.symbol = _symbol;
-   req.filter = ORDER_FILTER_LONG;
-   req.callback = close_callback;
-   ProcessOrder(ORDER_REQUEST_CLOSE_ALL,GetPointer(req));
+   CloseAll(ORDER_FILTER_LONG);
 }
 
 void close_sell() {
-   CRequestCloseAll req;
-   req.symbol = _symbol;
-   req.filter = ORDER_FILTER_SHORT;
-   req.callback = close_callback;
-   ProcessOrder(ORDER_REQUEST_CLOSE_ALL,GetPointer(req));
+   CloseAll(ORDER_FILTER_SHORT);
 }
 
 
