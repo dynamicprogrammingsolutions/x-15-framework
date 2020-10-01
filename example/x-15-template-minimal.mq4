@@ -18,7 +18,7 @@
 //* 4) Resell this EA with possibility to provide the source code under Non-Disclosure Agreement.
 //* 5) Make this sofwtare available on website as a free downloadable product WITHOUT providing the source code (i.e. only the ex4 file is downloadable)
 
-#define NAME "x-15-template"
+#define NAME "x-15-template-minimal"
 #define VERSION "1.2"
 
 #property copyright "Dynamic Programming Solutions Corp."
@@ -36,6 +36,7 @@
 #include <x-15-0.1/logger.mqh>
 
 #include <x-15-0.1/ext/tickcounter.mqh>
+#include <x-15-0.1/ext/trailing.mqh>
 
 enum ENUM_ENTRY_TYPE {
    ENTRY_LIMIT,
@@ -48,6 +49,13 @@ input double lotsize = 0.1;
 input double entry = 10;
 input double stoploss = 20;
 input double takeprofit = 20;
+
+input double breakevenat = 10;
+input double breakeven_profit = 5;
+input double trailingstop_activate = 15;
+input double trailingstop = 5;
+input double stoptrailing = 25;
+
 input int magic = 1;
 input bool order_by_market = false;
 
@@ -58,6 +66,7 @@ double takeprofit_ticks;
 double entry_ticks;
 
 CSymbol* _symbol;
+CTrailingParamsDefault* tsparams;
 
 int OnInit()
 {
@@ -75,6 +84,14 @@ int OnInit()
    stoploss_ticks = ConvertParamToFractional(_symbol,stoploss);
    takeprofit_ticks = ConvertParamToFractional(_symbol,takeprofit);
    entry_ticks = ConvertParamToFractional(_symbol,entry);
+   
+   tsparams = new CTrailingParamsDefault();
+   tsparams.breakevenat_ticks = ConvertParamToFractional(_symbol,breakevenat);
+   tsparams.breakeven_profit_ticks = ConvertParamToFractional(_symbol,breakeven_profit);
+   tsparams.trailingstop_activate_ticks = ConvertParamToFractional(_symbol,trailingstop_activate);
+   tsparams.trailingstop_ticks = ConvertParamToFractional(_symbol,trailingstop);
+   tsparams.stoptrailing_ticks = ConvertParamToFractional(_symbol,stoptrailing);
+   tsparams.breakevenat_ticks = ConvertParamToFractional(_symbol,breakevenat);
 
    EventSetTimer(60);
    return(INIT_SUCCEEDED);
@@ -83,6 +100,7 @@ int OnInit()
 void OnDeinit(const int reason)
 {
    delete _symbol;
+   delete tsparams;
    
    DeregisterOrderProcessors();
    
@@ -116,6 +134,7 @@ void manage_positions() {
    while(position_iter.HasNext()) {
       CPositionDetails* pos = position_iter.GetNext();
       addcommentln("open position: ",pos.GetId()," ",EnumToString(pos.GetPositionType())," profit: ",pos.GetProfit());
+      TrailingSL(tsparams,_symbol,pos,CalcTrailingDefault);
       switch(pos.GetPositionType()) {
          case ORDER_TYPE_BUY:
             buyprofit += pos.GetProfit();
@@ -168,9 +187,9 @@ void _open_buy_market() {
    req.magic = magic;
    req.volume = lotsize;
    req.order_type = ORDER_TYPE_BUY;
-   req.price = GetPrice(req.symbol,req.order_type);
-   req.sl = AddToLoss(req.order_type,req.price,stoploss_ticks*req.symbol.TickSize());
-   req.tp = AddToProfit(req.order_type,req.price,takeprofit_ticks*req.symbol.TickSize());
+   double price = GetPrice(req.symbol,req.order_type);
+   req.sl = AddToLoss(req.order_type,price,stoploss_ticks*req.symbol.TickSize());
+   req.tp = AddToProfit(req.order_type,price,takeprofit_ticks*req.symbol.TickSize());
    ProcessOrder(ORDER_REQUEST_OPEN_MARKET,GetPointer(req));
    Print("return ticket: ",req.ticket);
 }
@@ -182,9 +201,9 @@ void _open_sell_market() {
    req.magic = magic;
    req.volume = lotsize;
    req.order_type = ORDER_TYPE_SELL;
-   req.price = GetPrice(req.symbol,req.order_type);
-   req.sl = AddToLoss(req.order_type,req.price,stoploss_ticks*req.symbol.TickSize());
-   req.tp = AddToProfit(req.order_type,req.price,takeprofit_ticks*req.symbol.TickSize());
+   double price = GetPrice(req.symbol,req.order_type);
+   req.sl = AddToLoss(req.order_type,price,stoploss_ticks*req.symbol.TickSize());
+   req.tp = AddToProfit(req.order_type,price,takeprofit_ticks*req.symbol.TickSize());
    ProcessOrder(ORDER_REQUEST_OPEN_MARKET,GetPointer(req));
    Print("return ticket: ",req.ticket);
 }

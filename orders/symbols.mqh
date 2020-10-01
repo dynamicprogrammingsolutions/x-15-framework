@@ -130,8 +130,14 @@ public:
    }
 };
 
+CSymbolImpl __CurrentSymbol(NULL);
+
 CSymbol* GetSymbol(const string symbol) {
-   return new CSymbolImpl(symbol);
+   if (symbol == NULL) {
+      return GetPointer(__CurrentSymbol);
+   } else {
+      return new CSymbolImpl(symbol);
+   }
 }
 
 CSymbol* __defaultSymbol;

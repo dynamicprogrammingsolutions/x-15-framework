@@ -12,6 +12,7 @@
 #define ORDER_FILTER_PENDING 0x003C
 #define ORDER_FILTER_STOP 0x000C
 #define ORDER_FILTER_LIMIT 0x0030
+#define ORDER_FILTER_ANY 0xFFFF
 
 bool FilterOrder(int order_type, int filters) {
    return

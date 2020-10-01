@@ -28,25 +28,24 @@
 
 #define ENABLE_DEBUG
 
-#include <x-15-0.1/main.mqh>
 #include <x-15-0.1/signals.mqh>
 #include <x-15-0.1/tradesignal.mqh>
+#include <x-15-0.1/ext/signal_wrapper.mqh>
+#include <x-15-0.1/ext/tickcounter.mqh>
+#include <x-15-0.1/ext/filters/trade_only_firsttick.mqh>
+#include <x-15-0.1/ext/filters/trade_only_signal_change.mqh>
+#include <x-15-0.1/ext/trailing_stopscalc_oop.mqh>
 
 #include <x-15-0.1/orders/market_orders.mqh>
 #include <x-15-0.1/orders/market_orders.mqh>
 #include <x-15-0.1/orders/pending_orders.mqh>
-#include <x-15-0.1/orders/filters.mqh>
 #include <x-15-0.1/orders/stops.mqh>
 #include <x-15-0.1/orders/moneymanagement.mqh>
+#include <x-15-0.1/orders/filters.mqh>
+#include <x-15-0.1/orders/order_helper.mqh>
 
 #include <x-15-0.1/comments.mqh>
 #include <x-15-0.1/logger.mqh>
-
-#include <x-15-0.1/ext/tickcounter.mqh>
-#include <x-15-0.1/ext/filters/trade_only_firsttick.mqh>
-#include <x-15-0.1/ext/filters/trade_only_signal_change.mqh>
-#include <x-15-0.1/ext/signal_data.mqh>
-
 #include <x-15-0.1/collections.mqh>
 
 enum ENUM_ENTRY_TYPE {
@@ -61,7 +60,11 @@ input double entry = 10;
 input double stoploss = 20;
 input double takeprofit = 20;
 
-input double trailingstop = 20;
+input double breakevenat = 10;
+input double breakeven_profit = 5;
+input double trailingstop_activate = 15;
+input double trailingstop = 5;
+input double stoptrailing = 25;
 
 int entry_ticks;
 int stoploss_ticks;
@@ -83,96 +86,23 @@ int signal_macd(int bar) {
    return SIGNAL_NO;
 }
 
-
 CSignal<int,int>* signal_with_filters;
 
 int get_signal() {
    return signal_with_filters.Run(1);
 }
 
-class CSignalWrapper : public CSignal<int,int> {
-protected:
-   CSignal<int,int>* m_delegate;
-
-public:
-   datetime lastrun;
-   bool did_run;
-   int signal;
-   int last_execution_type;
-   string signal_name;
-
-public:
-   CSignalWrapper(CSignal<int,int>* delegate, string signal_name) : m_delegate(delegate), signal_name(signal_name) {
-      AttachPtr(m_delegate);
-   }
-   ~CSignalWrapper() {
-      DetachPtr(m_delegate);
-   }
-   virtual int Run(int bar) {
-      this.last_execution_type = SIGNAL_EXECUTION_RUN;
-      this.did_run = true;
-      this.signal = m_delegate.Run(bar);
-      this.lastrun = TimeCurrent();
-      return this.signal;
-   }
-   virtual void OnTick() {
-      if (this.last_execution_type == SIGNAL_EXECUTION_ONTICK) this.did_run = false;
-      this.last_execution_type = SIGNAL_EXECUTION_ONTICK;
-      m_delegate.OnTick();
-      addcommentln(this.signal_name,": ",SignalToString(this.signal)," lastrun: ",TimeToString(this.lastrun));
-   }
-};
-
-CSignal<int,int>* WrapSignal(string name, CSignal<int,int>* signal) {
-   return new CSignalWrapper(signal,name);
-}
-
-/*
-void writedata(CSignalData* state) {
-   addcommentln(state.signal_name," Signal: ",SignalToString(state.signal));
-}
-
-void writedata_main(CSignalData* state) {
-   addcomment("Main Signal: ",SignalToString(state.signal)," lastrun: ",TimeToString(state.lastrun),"\n");
-}
-
-CSignal<int,int>* WrapSignal(CSignal<int,int>* signal, string name) {
-   return new CWrapperWriteData(new CWrapperSaveData(signal,name),writedata); 
-}
-
-CSignal<int,int>* WrapSignalMain(CSignal<int,int>* signal) {
-   return new CWrapperWriteData(new CWrapperSaveData(signal,"Main"),writedata_main); 
-}
-*/
-
-class CTrailingParams {
-public:
-   int trailingstop_ticks;
-   CTrailingParams(int trailingstop_ticks) : trailingstop_ticks(trailingstop_ticks) {}
-};
-
-bool calc_trailing(void* params, CSymbol* sym, double in_profit, double sl, double& newsl) {
-   double ts = ((CTrailingParams*)params).trailingstop_ticks*sym.TickSize();
-   if (in_profit >= ts) {
-      if (-sl <= in_profit-ts) {
-         newsl = -(in_profit-ts);
-         return true;
-      }
-   }
-   return false;
-}
-
-CSymbol* _symbol;
 CStop* slcalc;
 CStop* tpcalc;
 CStop* entrycalc;
 CMoneyManagement* mm;
-CTrailingParams* ts;
+CStop* ts;
 
 int OnInit()
 {
 
    _symbol = GetSymbol(NULL);
+   _magic = magic;
    
    #ifdef __MQL4__
       __order_by_market = order_by_market;
@@ -194,7 +124,16 @@ int OnInit()
    tpcalc = new CStopTicks(takeprofit_ticks);
    entrycalc = new CStopTicks(entry_ticks);
    mm = new CMMFixed(lotsize);
-   ts = new CTrailingParams(ConvertParamToFractional(_symbol,trailingstop));
+   
+   
+   CTrailingParamsDefault* tsparams = new CTrailingParamsDefault();
+   tsparams.breakevenat_ticks = ConvertParamToFractional(_symbol,breakevenat);
+   tsparams.breakeven_profit_ticks = ConvertParamToFractional(_symbol,breakeven_profit);
+   tsparams.trailingstop_activate_ticks = ConvertParamToFractional(_symbol,trailingstop_activate);
+   tsparams.trailingstop_ticks = ConvertParamToFractional(_symbol,trailingstop);
+   tsparams.stoptrailing_ticks = ConvertParamToFractional(_symbol,stoptrailing);
+   tsparams.breakevenat_ticks = ConvertParamToFractional(_symbol,breakevenat);
+   ts = new CTrailingStopcalc(tsparams,CalcTrailingDefault);
 
    EventSetTimer(60);
    return(INIT_SUCCEEDED);
@@ -245,23 +184,12 @@ void OnTick()
 #include <x-15-0.1/ext/trailing.mqh>
 
 void manage_positions() {
-   CIteratorObj<CPositionDetails>* position_iter = get_positions_iterator();
+   CIteratorObj<CPositionDetails>* position_iter = GetPositionsIterator();
    while(position_iter.HasNext()) {
       CPositionDetails* pos = position_iter.GetNext();
       addcommentln("open position: ",pos.GetId());
-      TrailingSL(ts,_symbol,pos,calc_trailing);
+      TrailingSLByStopcalc(pos,ts);
    }
-}
-
-
-CIteratorObj<CPositionDetails>* get_positions_iterator() {
-   CRequestSelectPositions req;
-   req.filter_by_symbol = true;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.filter = ORDER_FILTER_MARKET;
-   ProcessOrder(ORDER_REQUEST_SELECT_POSITIONS,GetPointer(req));
-   return req.iterator;
 }
 
 void process_buy() {
@@ -279,21 +207,11 @@ void process_sell() {
 }
 
 int cnt_buy() {
-   CRequestCntOrders req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.filter = ORDER_FILTER_LONG;
-   ProcessOrder(ORDER_REQUEST_CNT_ORDERS,GetPointer(req));
-   return req.cnt;
+   return CntOrders(ORDER_FILTER_LONG);
 }
 
 int cnt_sell() {
-   CRequestCntOrders req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.filter = ORDER_FILTER_SHORT;
-   ProcessOrder(ORDER_REQUEST_CNT_ORDERS,GetPointer(req));
-   return req.cnt;
+   return CntOrders(ORDER_FILTER_SHORT);
 }
 
 void open_buy() {
@@ -313,103 +231,50 @@ void open_sell() {
 }
 
 void _open_buy_market() {
-   CRequestOpenMarketWithStops req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.mm = mm;
-   req.order_type = ORDER_TYPE_BUY;
-   req.slcalc = slcalc;
-   req.tpcalc = tpcalc;
-   ProcessOrder(ORDER_REQUEST_OPEN_MARKET,GetPointer(req));
-   Print("return ticket: ",req.ticket);  
+   int ticket = OpenMarketOrder(ORDER_TYPE_BUY,mm,slcalc,tpcalc);
+   print(("return ticket: ",ticket));
 }
 
 void _open_sell_market() {
-   CRequestOpenMarketWithStops req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.mm = mm;
-   req.order_type = ORDER_TYPE_SELL;
-   req.slcalc = slcalc;
-   req.tpcalc = tpcalc;
-   ProcessOrder(ORDER_REQUEST_OPEN_MARKET,GetPointer(req));
-   Print("return ticket: ",req.ticket);
+   int ticket = OpenMarketOrder(ORDER_TYPE_SELL,mm,slcalc,tpcalc);
+   print(("return ticket: ",ticket));
 }
 
 void _open_buy_pending() {
-   CRequestOpenPendingWithStops req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.mm = mm;
+   ENUM_ORDER_TYPE type = -1;
    switch(pending_entry_type) {
-      case ENTRY_LIMIT: req.order_type = ORDER_TYPE_BUY_LIMIT; break;
-      case ENTRY_STOP: req.order_type = ORDER_TYPE_BUY_STOP; break;
+      case ENTRY_LIMIT: type = ORDER_TYPE_BUY_LIMIT; break;
+      case ENTRY_STOP: type = ORDER_TYPE_BUY_STOP; break;
    }
-   req.entrycalc = entrycalc;
-   req.slcalc = slcalc;
-   req.tpcalc = tpcalc;
-   ProcessOrder(ORDER_REQUEST_OPEN_PENDING,GetPointer(req));
-   Print("return ticket: ",req.ticket);  
+   int ticket = OpenPendingOrder(type,mm,entrycalc,slcalc,tpcalc);
+   print(("return ticket: ",ticket));
 }
 
 void _open_sell_pending() {
-   CRequestOpenPendingWithStops req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.mm = mm;
+   ENUM_ORDER_TYPE type = -1;
    switch(pending_entry_type) {
-      case ENTRY_LIMIT: req.order_type = ORDER_TYPE_SELL_LIMIT; break;
-      case ENTRY_STOP: req.order_type = ORDER_TYPE_SELL_STOP; break;
+      case ENTRY_LIMIT: type = ORDER_TYPE_SELL_LIMIT; break;
+      case ENTRY_STOP: type = ORDER_TYPE_SELL_STOP; break;
    }
-   req.entrycalc = entrycalc;
-   req.slcalc = slcalc;
-   req.tpcalc = tpcalc;
-   ProcessOrder(ORDER_REQUEST_OPEN_PENDING,GetPointer(req));
-   Print("return ticket: ",req.ticket);  
+   int ticket = OpenPendingOrder(type,mm,entrycalc,slcalc,tpcalc);
+   print(("return ticket: ",ticket));
 }
 
-
-
-void close_callback(int order_ticket, bool success, int error) {
-   if (!success) {
-      Print("close error: ",ErrorDescription(error));
-   }
-}
 
 void close_buy() {
-   CRequestCloseAll req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.filter = ORDER_FILTER_LONG;
-   req.callback = close_callback;
-   ProcessOrder(ORDER_REQUEST_CLOSE_ALL,GetPointer(req));
+   CloseAll(ORDER_FILTER_LONG);
 }
 
 void close_sell() {
-   CRequestCloseAll req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.filter = ORDER_FILTER_SHORT;
-   req.callback = close_callback;
-   ProcessOrder(ORDER_REQUEST_CLOSE_ALL,GetPointer(req));
+   CloseAll(ORDER_FILTER_SHORT);
 }
 
 void cancel_long() {
-   CRequestCancelAll req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.filter = ORDER_FILTER_LONG;
-   req.callback = close_callback;
-   ProcessOrder(ORDER_REQUEST_CANCEL_ALL,GetPointer(req));
+   CancelAll(ORDER_FILTER_LONG);
 }
 
 void cancel_short() {
-   CRequestCancelAll req;
-   req.symbol = _symbol;
-   req.magic = magic;
-   req.filter = ORDER_FILTER_SHORT;
-   req.callback = close_callback;
-   ProcessOrder(ORDER_REQUEST_CANCEL_ALL,GetPointer(req));
+   CancelAll(ORDER_FILTER_SHORT);
 }
 
 void OnTimer()
