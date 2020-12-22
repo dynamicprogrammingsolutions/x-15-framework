@@ -15,4 +15,7 @@ public:
          return 0;
       }
    }
+   virtual double LastCalculatedLots() {
+      return m_lots;
+   }
 };

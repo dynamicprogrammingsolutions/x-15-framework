@@ -16,17 +16,21 @@ public:
       return GetPointer(__faces);
    }
 
-   long position_id;
+   long position_id;  
+   long new_position_id;
+   double close_volume;
    int slippage;
    bool success;
    int error;
    virtual int Type() { return ORDER_REQUEST_CLOSE_POSITION; }
    
    CRequestClosePosition():
+      close_volume(0),
       position_id(-1),
       success(false),
       error(-1),
-      slippage(0)
+      slippage(0),
+      new_position_id(-1)
    {}
 
 };

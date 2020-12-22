@@ -13,6 +13,8 @@
 #include "../share/errordescription.mqh"
 #include "../../logger.mqh"
 
+bool __report_errors_alert = false;
+
 void OrderProcessorReportErrors(int request, void* parameters, COrderProcessor* next) {
    next.ProcessOrder(request,parameters);
    
@@ -27,7 +29,7 @@ void OrderProcessorReportErrors(int request, void* parameters, COrderProcessor* 
          int error = 0;
          switch(request) {
             case ORDER_REQUEST_OPEN_MARKET: {
-               CRequestOpenMarket* req = dynamic_cast<CRequestOpenMarket*>(request);
+               CRequestOpenMarket* req = dynamic_cast<CRequestOpenMarket*>(parameters);
                if (req != NULL) {
                   success = req.success;
                   error = req.error;
@@ -35,7 +37,7 @@ void OrderProcessorReportErrors(int request, void* parameters, COrderProcessor* 
                break;
             }   
             case ORDER_REQUEST_OPEN_PENDING: {
-               CRequestOpenPending* req = dynamic_cast<CRequestOpenPending*>(request);
+               CRequestOpenPending* req = dynamic_cast<CRequestOpenPending*>(parameters);
                if (req != NULL) {
                   success = req.success;
                   error = req.error;
@@ -43,7 +45,7 @@ void OrderProcessorReportErrors(int request, void* parameters, COrderProcessor* 
                break;
             }
             case ORDER_REQUEST_MODIFY_POSITION: {
-               CRequestModifyPosition* req = dynamic_cast<CRequestModifyPosition*>(request);
+               CRequestModifyPosition* req = dynamic_cast<CRequestModifyPosition*>(parameters);
                if (req != NULL) {
                   success = req.success;
                   error = req.error;
@@ -51,7 +53,7 @@ void OrderProcessorReportErrors(int request, void* parameters, COrderProcessor* 
                break;
             }
             case ORDER_REQUEST_MODIFY_PENDING: {
-               CRequestModifyPending* req = dynamic_cast<CRequestModifyPending*>(request);
+               CRequestModifyPending* req = dynamic_cast<CRequestModifyPending*>(parameters);
                if (req != NULL) {
                   success = req.success;
                   error = req.error;
@@ -59,7 +61,7 @@ void OrderProcessorReportErrors(int request, void* parameters, COrderProcessor* 
                break;
             }
             case ORDER_REQUEST_CLOSE_POSITION:{
-               CRequestClosePosition* req = dynamic_cast<CRequestClosePosition*>(request);
+               CRequestClosePosition* req = dynamic_cast<CRequestClosePosition*>(parameters);
                if (req != NULL) {
                   success = req.success;
                   error = req.error;
@@ -69,7 +71,11 @@ void OrderProcessorReportErrors(int request, void* parameters, COrderProcessor* 
          }
       
          if (!success) {
-            print(("order error: ",ErrorDescription(error)," details: ",__GetRequestDetails(parameters)));
+            if (__report_errors_alert) {
+               alert("Order Error (",error,"): ",ErrorDescription(error),". Details: ",__GetRequestDetails(parameters));
+            } else {
+               print(("Order Error (",error,"): ",ErrorDescription(error),". Details: ",__GetRequestDetails(parameters)));
+            }
          }
 
       }

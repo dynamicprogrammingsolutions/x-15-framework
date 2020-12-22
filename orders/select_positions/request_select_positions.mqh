@@ -7,6 +7,7 @@
 #include "../share/position_details.mqh"
 
 typedef void(*SelectPositionsCallbackFunc)(CPositionDetails* details, void* obj);
+typedef bool(*SelectPositionsFilterCallback)(CPositionDetails* details);
 
 class CRequestSelectPositions : public CRequest {
 
@@ -16,6 +17,7 @@ public:
    bool filter_by_magic;
    CSymbol* symbol;
    int filter;
+   SelectPositionsFilterCallback filter_callback;
    int magic;
    int cnt;
    SelectPositionsCallbackFunc callback;

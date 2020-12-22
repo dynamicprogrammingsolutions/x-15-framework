@@ -30,7 +30,8 @@ public:
          if (OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) {
             if ((!req.filter_by_symbol || __FilterBySymbol(OrderSymbol(),req.symbol))
                   && (!req.filter_by_magic || __FilterByMagicNumber(OrderMagicNumber(),req.magic))
-                  && FilterOrder(OrderType(),ORDER_FILTER_MARKET & req.filter))
+                  && FilterOrder(OrderType(),ORDER_FILTER_MARKET & req.filter)
+                  && (req.filter_callback == NULL || req.filter_callback(GetPointer(details))))
             {
                idx = i-1;
                return true;
@@ -47,11 +48,13 @@ public:
       if (req.callback != NULL || req.count_only) {
          int total = OrdersTotal();
          req.cnt = 0;
+         CPositionDetailsImpl details;
          for (int i = total-1; i >= 0; i--) {
             if (OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) {
                if ((!req.filter_by_symbol || __FilterBySymbol(OrderSymbol(),req.symbol))
                      && (!req.filter_by_magic || __FilterByMagicNumber(OrderMagicNumber(),req.magic))
-                     && FilterOrder(OrderType(),ORDER_FILTER_MARKET & req.filter))
+                     && FilterOrder(OrderType(),ORDER_FILTER_MARKET & req.filter)
+                     && (req.filter_callback == NULL || req.filter_callback(GetPointer(details))))
                {
                   if (req.callback) {
                      CPositionDetailsImpl details;

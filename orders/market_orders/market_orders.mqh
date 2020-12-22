@@ -3,15 +3,23 @@
 #include "../order_processor_register.mqh"
 #include "request_market_orders.mqh"
 #include "../symbols.mqh"
+#include "../share/order_filters.mqh"
 
 #ifdef __MQL4__
    bool __order_by_market = false;
    void OpenMarket(CRequestOpenMarket* req) {
       int ret = -1;
       req.success = false;
+      
+      if (!FilterOrder(req.order_type,ORDER_FILTER_MARKET)) {
+         req.error = 10001;
+         return;
+      }
+      
       if (!__order_by_market) {
-         debug(("Sending order ",req.symbol," ",req.order_type," magic: ",req.magic));
-         ret = OrderSend(req.symbol.symbol,req.order_type,req.volume,GetPrice(req.symbol,req.order_type),req.slippage,req.sl,req.tp,req.comment,req.magic);
+         debug(("Sending order ",req.symbol," ",req.order_type," magic: ",req.magic," comment: ",req.comment));
+         req.current_price = GetPrice(req.symbol,req.order_type);
+         ret = OrderSend(req.symbol.symbol,req.order_type,req.volume,req.current_price,req.slippage,req.sl,req.tp,req.comment,req.magic);
          if (ret <= 0) {
             req.error = GetLastError();
          } else {
@@ -19,8 +27,9 @@
             req.ticket = ret;
          }
       } else {
-         debug(("Sending order ",req.symbol," ",req.order_type," magic: ",req.magic));
-         ret = OrderSend(req.symbol.symbol,req.order_type,req.volume,GetPrice(req.symbol,req.order_type),req.slippage,0,0,req.comment,req.magic);
+         debug(("Sending order ",req.symbol," ",req.order_type," magic: ",req.magic," comment: ",req.comment));
+         req.current_price = GetPrice(req.symbol,req.order_type);
+         ret = OrderSend(req.symbol.symbol,req.order_type,req.volume,req.current_price,req.slippage,0,0,req.comment,req.magic);
          if (ret <= 0) {
             req.error = GetLastError();
          } else {

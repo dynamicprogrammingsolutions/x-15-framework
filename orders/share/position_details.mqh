@@ -22,6 +22,9 @@ public:
     virtual double GetEntryPrice() {
         return 0;
     }
+    double GetOpenPrice() {
+      return GetEntryPrice();
+    }
     virtual double GetTakeprofit() {
         return -1;
     }
@@ -42,5 +45,8 @@ public:
     }
     virtual CSymbol* GetCSymbol() {
         return NULL;
+    }
+    int GetProfitInTicks() {
+      return ComparePrice(this.GetCSymbol(),this.GetPositionType(),this.GetClosePrice(),this.GetEntryPrice());
     }
 };

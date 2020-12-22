@@ -29,13 +29,18 @@ print\(([\ a-zA-Z()->\._",:]*\));
 #define alert
 #endif
 
-#ifdef ENABLE_DEBUG
-#define debug(s1) Print s1
-#endif
-
 #ifndef ENABLE_DEBUG
 #define debug(s1)
+#endif
 
+#ifdef DISABLE_DEBUG
+#define debug(s1)
+#endif
+
+#ifdef ENABLE_DEBUG
+#ifndef DISABLE_DEBUG
+#define debug(s1) Print s1
+#endif
 #endif
 
 #ifdef FILTER_DEBUG

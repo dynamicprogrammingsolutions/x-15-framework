@@ -8,19 +8,41 @@
 
 #include "..\share\mt4\position_details_impl.mqh"
    
+   CPositionDetailsImpl __GetPositionDetails_PositionDetailsImpl;
+   
    void GetPositionDetails(CRequestGetPositionDetails* req) {
-      static CPositionDetailsImpl details;
       if (OrderSelect((int)req.position_id,SELECT_BY_TICKET,MODE_TRADES)) {
          if (FilterOrder(OrderType(),ORDER_FILTER_MARKET) && OrderCloseTime() == 0) {
             req.success = true;
-            req.details = GetPointer(details);
+            req.details = GetPointer(__GetPositionDetails_PositionDetailsImpl);
          } else {
-            req.success = false;
-            req.error = 0;
+            if (req.include_closed && FilterOrder(OrderType(),ORDER_FILTER_MARKET)) {
+               req.success = true;
+               req.details = GetPointer(__GetPositionDetails_PositionDetailsImpl);
+            } else {
+               //Print("unsuccessful selecting order, include closed: ",req.include_closed,", order type: ",EnumToString((ENUM_ORDER_TYPE)OrderType())," close time: ",OrderCloseTime());
+               req.success = false;
+               req.error = 0;
+            }
          } 
       } else {
-         req.success = false;
-         req.error = GetLastError();
+         /*if (req.include_closed) {
+            if (OrderSelect((int)req.position_id,SELECT_BY_TICKET,MODE_HISTORY)) {
+               if (FilterOrder(OrderType(),ORDER_FILTER_MARKET)) {
+                  req.success = true;
+                  req.details = GetPointer(__GetPositionDetails_PositionDetailsImpl);
+               } else {
+                  req.success = false;
+                  req.error = 0;
+               }
+            } else {
+               req.success = false;
+               req.error = GetLastError();
+            }
+         } else {*/
+            req.success = false;
+            req.error = GetLastError();
+         /*}*/
       }
    }
 

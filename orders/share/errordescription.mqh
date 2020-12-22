@@ -100,6 +100,10 @@ string ErrorDescription(int error_code)
       case 4204: error_string="no object name";                                           break;
       case 4205: error_string="object coordinates error";                                 break;
       case 4206: error_string="no specified subwindow";                                   break;
+      
+      
+      // Framework Errors
+      case 10001: error_string="invalid order type";                                   break;
       default:   error_string="unknown error";
      }
 //----

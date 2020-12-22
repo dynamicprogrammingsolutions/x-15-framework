@@ -7,4 +7,7 @@ public:
    virtual double Calculate(CRequest* request) {
       return 0;
    }
+   virtual double LastCalculatedLots() {
+      return 0;
+   }
 };

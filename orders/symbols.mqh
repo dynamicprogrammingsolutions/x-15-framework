@@ -23,7 +23,8 @@ protected:
       lotstep(0),
       maxlot(0),
       minlot(0),
-      point(0)
+      point(0),
+      tickvalue(0)
    {}
 public:
    double ask;
@@ -39,7 +40,13 @@ public:
    virtual double Ask() { return 0; }
    virtual double Bid() { return 0; }
    virtual int Spread() { return 0; }
+   virtual int SpreadInTicks() { return this.InTicks(this.Spread()*this.Point()); }
+   virtual int TicksToPoints(int ticks) {
+      if (Point() == 0) return ticks;
+      return (int)MathRound((ticks*TickSize())/Point());
+   }
    virtual double TickSize() { return 0; }
+   virtual int InTicks(double price) { return 0; }
    virtual double LotStep() { return 0; }
    virtual double TickValue() { return 0; }
    virtual double MaxLot() { return 0; }
@@ -88,6 +95,7 @@ public:
    virtual int InTicks(double price) {
       return (int)MathRound(price/this.TickSize());
    }
+   
    virtual double Point() {
       if (point==0) point = SymbolInfoDouble(symbol,SYMBOL_POINT);
       return point;
@@ -205,6 +213,21 @@ double GetClosePrice(CSymbol* symbol, ENUM_ORDER_TYPE order_type) {
    }
 }
 
+double GetClosePrice(string symbol, ENUM_ORDER_TYPE order_type) {
+   switch(order_type) {
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return SymbolInfoDouble(symbol,SYMBOL_ASK);
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return SymbolInfoDouble(symbol,SYMBOL_BID);
+      default:
+         return 0;
+   }
+}
+
 double GetDiffProfit(ENUM_ORDER_TYPE order_type, double price, double priceto) {
    switch(order_type) {
       case ORDER_TYPE_BUY:
@@ -234,6 +257,53 @@ double GetDiffLoss(ENUM_ORDER_TYPE order_type, double price, double priceto) {
          return 0;
    }
 }
+
+int GetDiffProfit(CSymbol* sym, ENUM_ORDER_TYPE order_type, double price, double priceto) {
+   switch(order_type) {
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return sym.InTicks(priceto - price);
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return sym.InTicks(price - priceto);
+      default:
+         return 0;
+   }
+}
+
+int ComparePrice(CSymbol* sym, ENUM_ORDER_TYPE order_type, double price_left, double price_right) {
+   return GetDiffProfit(sym,order_type,price_right,price_left);
+}
+
+int ComparePrice(CSymbol* sym, double price_higher, double price_lower) {
+   return sym.InTicks(price_higher - price_lower);
+}
+
+int CompareToCurrentEntryPrice(CSymbol* sym, ENUM_ORDER_TYPE order_type, double price_left) {
+   return GetDiffProfit(sym,order_type,GetPrice(sym,order_type),price_left);
+}
+
+int CompareToCurrentClosePrice(CSymbol* sym, ENUM_ORDER_TYPE order_type, double price_left) {
+   return GetDiffProfit(sym,order_type,GetClosePrice(sym,order_type),price_left);
+}
+
+int GetDiffLoss(CSymbol* sym, ENUM_ORDER_TYPE order_type, double price, double priceto) {
+   switch(order_type) {
+      case ORDER_TYPE_BUY:
+      case ORDER_TYPE_BUY_STOP:
+      case ORDER_TYPE_BUY_LIMIT:
+         return sym.InTicks(price - priceto);
+      case ORDER_TYPE_SELL:
+      case ORDER_TYPE_SELL_STOP:
+      case ORDER_TYPE_SELL_LIMIT:
+         return sym.InTicks(priceto - price);
+      default:
+         return 0;
+   }
+}
+
 
 bool IsProfitReached(CSymbol* symbol, ENUM_ORDER_TYPE order_type, double price) {
    switch(order_type) {
@@ -302,6 +372,7 @@ double AddToStop(ENUM_STOP_MODE stopmode, ENUM_ORDER_TYPE order_type, double pri
    return 0;
 }
 
+
 double GetDiff(ENUM_STOP_MODE stopmode, ENUM_ORDER_TYPE order_type, double price, double priceto) {
    switch (stopmode) {
       case STOP_MODE_SL:
@@ -318,6 +389,27 @@ double GetDiff(ENUM_STOP_MODE stopmode, ENUM_ORDER_TYPE order_type, double price
             case ORDER_TYPE_BUY_LIMIT:
             case ORDER_TYPE_SELL_LIMIT:
                return GetDiffLoss(order_type,price,priceto);
+         }
+   }
+   return 0;
+}
+
+int GetDiff(CSymbol* sym, ENUM_STOP_MODE stopmode, ENUM_ORDER_TYPE order_type, double price, double priceto) {
+   switch (stopmode) {
+      case STOP_MODE_SL:
+      case STOP_MODE_LOSS:
+         return GetDiffLoss(sym, order_type,price,priceto);
+      case STOP_MODE_TP:
+      case STOP_MODE_PROFIT:
+         return GetDiffProfit(sym, order_type,price,priceto);
+      case STOP_MODE_ENTRY:
+         switch(order_type) {
+            case ORDER_TYPE_BUY_STOP:
+            case ORDER_TYPE_SELL_STOP:
+               return GetDiffProfit(sym,order_type,price,priceto);
+            case ORDER_TYPE_BUY_LIMIT:
+            case ORDER_TYPE_SELL_LIMIT:
+               return GetDiffLoss(sym,order_type,price,priceto);
          }
    }
    return 0;

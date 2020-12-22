@@ -7,6 +7,8 @@
 #include "../../collections.mqh"
 
 typedef void(*SelectPendingOrdersCallbackFunc)(CPendingOrderDetails* details, void* obj);
+typedef bool(*SelectOrdersFilterCallback)(CPendingOrderDetails* details);
+
 
 class CRequestSelectOrders : public CRequest {
 
@@ -16,6 +18,7 @@ public:
    bool filter_by_magic;
    CSymbol* symbol;
    int filter;
+   SelectOrdersFilterCallback filter_callback;
    int magic;
    int cnt;
    SelectPendingOrdersCallbackFunc callback;

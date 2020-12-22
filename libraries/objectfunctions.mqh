@@ -84,6 +84,7 @@ bool hline_put(string name, double price, color cl, int ticket = -1, int width =
    }
    if (ticket != -1)
       name = ordobjname(ticket,name);
+      
    recent_objname = name;
  
    if (ObjectFind(name) == -1)

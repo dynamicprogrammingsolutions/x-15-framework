@@ -46,15 +46,15 @@ void OrderProcessorStops(int request, void* parameters, COrderProcessor* next) {
          bool modify = false;
          if (CheckPointer(req.entrycalc) != POINTER_INVALID) {
             req.price = req.order_details.GetEntryPrice();
-            modify = modify || req.entrycalc.Calculate(req,STOP_MODE_ENTRY,req.price);
+            modify = req.entrycalc.Calculate(req,STOP_MODE_ENTRY,req.price) || modify;
          }
          if (CheckPointer(req.slcalc) != POINTER_INVALID) {
             req.sl = req.order_details.GetStoploss();
-            modify = modify || req.slcalc.Calculate(req,STOP_MODE_SL,req.sl);
+            modify = req.slcalc.Calculate(req,STOP_MODE_SL,req.sl) || modify;
          }
          if (CheckPointer(req.tpcalc) != POINTER_INVALID) {
             req.tp = req.order_details.GetTakeprofit();
-            modify = modify || req.tpcalc.Calculate(req,STOP_MODE_TP,req.tp);
+            modify = req.tpcalc.Calculate(req,STOP_MODE_TP,req.tp) || modify;
          }
          if (modify) next.ProcessOrder(request,parameters);
       } else {
@@ -67,11 +67,11 @@ void OrderProcessorStops(int request, void* parameters, COrderProcessor* next) {
          bool modify = false;
          if (CheckPointer(req.slcalc) != POINTER_INVALID) {
             req.sl = req.position_details.GetStoploss();
-            modify = modify || req.slcalc.Calculate(req,STOP_MODE_SL,req.sl);
+            modify = req.slcalc.Calculate(req,STOP_MODE_SL,req.sl) || modify;
          }
          if (CheckPointer(req.tpcalc) != POINTER_INVALID) {
             req.tp = req.position_details.GetTakeprofit();
-            modify = modify || req.tpcalc.Calculate(req,STOP_MODE_TP,req.tp);
+            modify = req.tpcalc.Calculate(req,STOP_MODE_TP,req.tp) || modify;
          }
          if (modify) next.ProcessOrder(request,parameters);
       } else {

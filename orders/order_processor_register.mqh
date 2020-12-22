@@ -114,6 +114,15 @@ public:
    ~__COrderProcessorChain() {
       DetachPtr(m_order_processor);
    }
+   // TODO: When this method is called multiple times, the order processor is added to the same COrderProcessorByRequestId instance at the top of m_order_processor
+   // But when it's called after calling AddOrderProcessor with no request id, an COrderProcessorByRequestIdWithNext instance is added, which routes rest of the requests
+   // to the next in the chain.
+   
+   // TODO: create a preroute id, with default 0
+   // Based on call to AddOrderProcessor, the request id will be matched to preroute id
+   // Filters go between the preroute and COrderProcessorByRequestId
+   // Maybe there could be a switch: preroute and postroute, and according to that, the processor may be added to the top COrderProcessorByRequestId.
+   // at pos 0 it will hold the next processor. The Preoute processors will only get filters specifically added to them
    void AddOrderProcessor(int request, COrderProcessor* order_processor) {
       m_order_processor_by_reqid.AddOrderProcessor(request,order_processor);
       if (CheckPointer(m_order_processor) == POINTER_INVALID) {
@@ -144,13 +153,21 @@ public:
    }
 } __OrderProcessorChain;
 
-
 void RegisterOrderProcessor(OrderProcessorFunc orderProcessorFunc) {
    __OrderProcessorChain.AddOrderProcessor(new COrderProcessorFunc(orderProcessorFunc));
 }
 
+// TODO: Being able to add an order processor to an array of request, referring to the same COrderProcessorFunc instance
 void RegisterOrderProcessor(int request, OrderProcessorFunc orderProcessorFunc) {
    __OrderProcessorChain.AddOrderProcessor(request, new COrderProcessorFunc(orderProcessorFunc));
+}
+
+void RegisterOrderProcessor(COrderProcessor* orderProcessor) {
+   __OrderProcessorChain.AddOrderProcessor(orderProcessor);
+}
+
+void RegisterOrderProcessor(int request, COrderProcessor* orderProcessor) {
+   __OrderProcessorChain.AddOrderProcessor(request, orderProcessor);
 }
 
 bool OrderProcessorRegistered() {

@@ -8,6 +8,8 @@
 
 template<typename T>
 class CIteratorObj : public CObject {
+protected:
+   CIteratorObj() {}
 public:
    virtual T* GetNext() {
       return NULL;

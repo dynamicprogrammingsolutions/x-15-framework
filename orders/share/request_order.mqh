@@ -19,6 +19,7 @@ public:
       symbol(NULL),
       order_type(-1),
       volume(0),
+      current_price(0),
       price(0),
       sl(0),
       tp(0)

@@ -1,6 +1,7 @@
 #include "trailing.mqh"
 #include "../orders/share/errordescription.mqh"
 #include "../orders/stops.mqh"
+#include "../orders/order_helper.mqh"
 
 /*
 Usage:
@@ -70,15 +71,3 @@ public:
       return false;
    }
 };
-
-void TrailingSLByStopcalc(CPositionDetails* pos, CStop* ts_calc) {
-   CRequestModifyPositionWithStops req;
-   req.order_id = pos.GetId();
-   req.position_details = pos;
-   req.symbol = pos.GetCSymbol();
-   req.slcalc = ts_calc;
-   ProcessOrder(ORDER_REQUEST_MODIFY_POSITION,GetPointer(req));
-   if (req.error > 1) {
-      print(("Couldn't modify SL of order ",req.order_id," Error: ",req.error," ",ErrorDescription(req.error)));
-   }
-}

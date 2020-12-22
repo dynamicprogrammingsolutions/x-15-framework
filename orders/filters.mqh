@@ -5,7 +5,6 @@
 void RegisterStandardOrderFilters() {
 
    #ifdef REGISTER_MONEY_MANAGEMENT_FILTER
-      print(("register money management filter"));
       REGISTER_MONEY_MANAGEMENT_FILTER
    #endif
 
